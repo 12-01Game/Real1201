@@ -157,8 +157,6 @@ function determineShift() {
 }
 
 function shift() {
-		print(shiftable);
-
 	if (Input.GetAxis(shiftAxis) || Input.GetKeyDown("s")) { //controller or 's' key
 		if (object != null) {
 			var shift = determineShift();

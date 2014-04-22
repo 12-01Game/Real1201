@@ -10,8 +10,13 @@
  */
 
 #pragma strict
+
+
  
 // Variable Settings
+var collisionMode				: int 		= 2; 	// 0 = PushPop, 1 = Shadow Blend, 2 = Quicksand
+var collisionThreshold 			:float 		= .5;
+
 var shadowTexture 				: Material;			// Stores the texture for the shadow
 var reverseTriWinding 			: boolean;			// This prevents the "backfacing" problem
 var nearestLight				: Transform;		// Nearest Light gameobject (if one exists) that casts static shadow
@@ -23,6 +28,7 @@ var shadowDepth					: float 	= 1.0;
 // Environment settings
 private final var WALL_NAME 		: String 	= "BackWall";	// Name identifier for the back wall to calculate objDistanceToWall
 private final var SAM_NAME 			: String 	= "Test Sam";	// Name indentifier for the player to calculate distance from obj
+private final var HANK_NAME			: String 	= "Test Hank";
 private final var SHADOW_OFFSET		: float		= 0.01;			// distance shadow is offset from plane
 private final var triggerDistance 	: float 	= 10.0;			// distance at which Shadow Skewing is triggered
 
@@ -48,6 +54,7 @@ private var isCastByLight		: boolean = false;
 
 // Environment variables
 private var player 				: Transform;		// the player object to detect distance
+private var hank 				: GameObject;		// the player object to detect distance
 private var dist 				: float;			// player distance from gameobject
 
 /*
@@ -57,23 +64,13 @@ private var dist 				: float;			// player distance from gameobject
  */
 function Start () {
 	player = GameObject.Find(SAM_NAME).transform;
+	hank = GameObject.Find(HANK_NAME);
 	DefineDimensions();
 }
 
 function DefineDimensions(){
 	if(gameObject.name.Contains("WallShelf")){
-	
-		var ledge : Transform = transform.GetChild(1);
-		var bracketR : Transform = ledge.GetChild(0);
-		var bracketL : Transform = ledge.GetChild(1);
-		
-		var combinedBounds = renderer.bounds;
-		var renderers = GetComponentsInChildren(Renderer);
-		for (var render : Renderer in renderers) {
-		    if (render != renderer) {
-		    	combinedBounds.Encapsulate(render.bounds);
-		    }
-		}
+		var combinedBounds : Bounds = getCombinedBounds(gameObject);
 		
 		objWidth = combinedBounds.size.x;
 		objHeight = combinedBounds.size.y;
@@ -105,6 +102,17 @@ function DefineDimensions(){
 	
 	var wall : GameObject = GameObject.Find(WALL_NAME);
 	objToWallDistance = Mathf.Abs(wall.renderer.transform.position.z - objOriginZ - objDepth / 2) - SHADOW_OFFSET;
+}
+function getCombinedBounds(obj : GameObject){
+	var renderer : Renderer = obj.renderer;
+	var combinedBounds = renderer.bounds;
+	var renderers = obj.GetComponentsInChildren(Renderer);
+	for (var render : Renderer in renderers) {
+	    if (render != renderer) {
+	    	combinedBounds.Encapsulate(render.bounds);
+	    }
+	}
+	return combinedBounds;
 }
 /*
  *	Update()
@@ -517,6 +525,102 @@ function castShadow(x: float, z: float){
 		colliderV.center = Vector3(newRight - w/2, objOriginY + 1.5 * objHeight - shadowDepth/2, newBack);
 	else
 		colliderV.center = Vector3(newRight - w/2, yFloor + objHeight - shadowDepth/2, newBack);
+	
+	ShadowCollisionDetection();
+}
+function ShadowCollisionDetection(){
+	switch(collisionMode){
+	case 0:	// PushPop
+		PushPopCollision();
+		break;
+		
+	case 1: // Shadow Blend
+		ShadowBlendCollision();
+		break;
+		
+	case 2: // Quicksand
+		QuicksandCollision();
+		break;
+		
+	default:
+		break;
+	}
+	
+}
+function PushPopCollision(){
+	colliderV.enabled = true;
+	var hankBounds : Bounds = getCombinedBounds(hank);
+	if(hankBounds.Intersects(colliderV.bounds)){
+		var hankBottom : float = hank.transform.position.y - hankBounds.size.y / 2;
+		var hankCenter : float = hank.transform.position.x;
+		var hankLeft : float = hank.transform.position.x - hankBounds.size.x / 2;
+		var hankRight : float = hank.transform.position.x + hankBounds.size.x / 2;
+		var colliderLeft : float = colliderV.center.x - colliderV.size.x / 2;
+		var colliderRight : float = colliderV.center.x + colliderV.size.x / 2;
+		var colliderCenter : float = colliderV.center.y;
+		if(hankBottom < colliderCenter - collisionThreshold){
+			if(hankCenter > colliderLeft){
+				if(hankCenter < colliderRight)
+					PushHankToTop();
+				else if(hankLeft < colliderRight)
+					PushHankToRight();
+			}else if(hankRight > colliderLeft)
+				PushHankToLeft();
+		}
+	}
+}
+function ShadowBlendCollision(){
+	var hankBounds : Bounds = getCombinedBounds(hank);
+	var hankBottom : float = hank.transform.position.y - hankBounds.size.y / 2;
+	var colliderCenter : float = colliderV.center.y;
+	if(hankBottom < colliderCenter - collisionThreshold){
+		colliderV.enabled = false;
+	}else{
+		colliderV.enabled = true;
+	}
+}
+private static var last_x : int = -1;
+function QuicksandCollision(){
+	colliderV.enabled = true;
+	var hankBounds : Bounds = getCombinedBounds(hank);
+	if(hankBounds.Intersects(colliderV.bounds)){
+		var hankBottom : float = hank.transform.position.y - hankBounds.size.y / 2;
+		var hankCenter : float = hank.transform.position.x;
+		var hankLeft : float = hank.transform.position.x - hankBounds.size.x / 2;
+		var hankRight : float = hank.transform.position.x + hankBounds.size.x / 2;
+		var colliderLeft : float = colliderV.center.x - colliderV.size.x / 2;
+		var colliderRight : float = colliderV.center.x + colliderV.size.x / 2;
+		var colliderCenter : float = colliderV.center.y;
+		if(hankBottom < colliderCenter - collisionThreshold){
+			if(last_x == -1)
+				last_x = hank.transform.position.x;
+			else{
+				if(hankCenter > colliderLeft){
+					if(hankCenter < colliderRight)
+						hank.transform.position.x = (hank.transform.position.x + last_x) / 2;
+					else if(hankLeft < colliderRight)
+						PushHankToRight();
+				}else if(hankRight > colliderLeft)
+					PushHankToLeft();
+				}
+		}
+	}else
+		last_x = -1;
+}
+function PushHankToTop(){
+	var hankBounds : Bounds = getCombinedBounds(hank);
+	var colliderTop : float = colliderV.center.y + colliderV.size.y / 2;
+	hank.transform.position.y = colliderTop + hankBounds.size.y / 2;
+}
+function PushHankToLeft(){
+	var hankBounds : Bounds = getCombinedBounds(hank);
+	var colliderLeft : float = colliderV.center.x - colliderV.size.x / 2;
+	hank.transform.position.x = colliderLeft - hankBounds.size.x / 2;
+}
+function PushHankToRight(){
+	var hankBounds : Bounds = getCombinedBounds(hank);
+	var colliderRight : float = colliderV.center.x + colliderV.size.x / 2;
+	hank.transform.position.x = colliderRight + hankBounds.size.x / 2;
 }
 
 /*
