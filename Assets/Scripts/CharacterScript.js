@@ -21,9 +21,9 @@ var rotationSpeed				: float = 10.0f;	// The speed at which this character rotat
 var canRotate					: boolean = true;	// Set this to true if you want the character to rotate
 var canJump						: boolean = true;	// Set this to true if you want the character to jump
 
-var gravity						: float = .08;		// Control how much gravity this character is exposed to
+var gravity						: float = .0981;		// Control how much gravity this character is exposed to
 
-static var xMotion						: float = 0.0;		// LOL ROGER
+static var xMotion				: float = 0.0;		// LOL ROGER
 
 private var controller			: CharacterController;			// The CharacterController component that must be attached to this character
 
@@ -60,6 +60,7 @@ function Update () {
 		var sfa = Quaternion.Euler(Vector3(0, shouldFaceAngle, 0));
 		transform.rotation = Quaternion.Slerp(transform.rotation, sfa, rotationSpeed * Time.deltaTime);
 	}
+	
 	// Otherwise, don't rotate smoothly at all (Hank)
 	else {
 		transform.rotation.y = shouldFaceAngle;
@@ -67,16 +68,25 @@ function Update () {
 	
 	var xMotion = 0;
 	var yMotion = 0;
+	
+	// Jumping...
+	if (controller.isGrounded && Input.GetButton("Jump") && canJump) {
+		print("isGrounded and jumping!");
+		
+		// Reset gravity acceleration
+		fallFrames = 1;
+		yMotion = jumpForce;
+		xMotion = savedXMotion;
+	}
 
 	// Grounded...
-	if (controller.isGrounded) {
+	else if (controller.isGrounded) {
 	
 		// Reset gravity acceleration
 		fallFrames = 1;
 		
 		// Get desired X-motion
 		xMotion = Input.GetAxis(player + "Horizontal") * speed;
-		savedXMotion = xMotion;
 		
 		// No Y-motion
 		yMotion = 0;
@@ -90,24 +100,28 @@ function Update () {
 		}
 	}
 	
-	// Jumping...
-	if (controller.isGrounded && Input.GetButton("Jump") && canJump) {
-		yMotion = jumpForce;
-		savedYMotion = yMotion;
-	}
-	
 	// Falling...
 	else {
+	
+		// Check for a collision above him
+		if ((controller.collisionFlags & CollisionFlags.Above) != 0) {
+			savedYMotion = -10;
+			fallFrames = fallFrames + 20;
+		}
 		
 		// Simulate acceleration by multiplying by the number of frames the character has been airborne for
 		yMotion = savedYMotion - (gravity * fallFrames);
-		savedYMotion = yMotion;
 		fallFrames++;
 		
 		// Use the X-motion right before the character got airborne
 		xMotion = savedXMotion;
 	}
-			
+		
+	// Move	
 	controller.Move(Vector3(xMotion * Time.deltaTime, yMotion * Time.deltaTime, 0));
+	
+	// Save the motions
+	savedXMotion = xMotion;
+	savedYMotion = yMotion;
 	
 }
