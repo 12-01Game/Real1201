@@ -55,18 +55,18 @@ function Awake() {
 function Update () {
 
 	// If the character can rotate, rotate smoothly (Sam)
-	if (canRotate) {
+	if (canRotate && !ObjectManipulation.secondGrab && this.gameObject.tag == "Player") {
 		// Use slerp to provide smooth character rotation
 		var sfa = Quaternion.Euler(Vector3(0, shouldFaceAngle, 0));
 		transform.rotation = Quaternion.Slerp(transform.rotation, sfa, rotationSpeed * Time.deltaTime);
 	}
 	
 	// Otherwise, don't rotate smoothly at all (Hank)
-	else {
+	else if (this.gameObject.tag == "Player2") {
 		transform.rotation.y = shouldFaceAngle;
 	}
 	
-	var xMotion = 0;
+	xMotion = 0;
 	var yMotion = 0;
 	
 	// Jumping...
