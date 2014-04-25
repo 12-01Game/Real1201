@@ -222,13 +222,16 @@ function shift() {
 				/*This section gives a delayed animation to the object shift */
 				if (shiftObject != null) {
 					var vect = getVect();
-					for (var i = 0; i < 1/Time.deltaTime; i++) {
+					var duration = 1/Time.deltaTime;
+					var yieldTime = .0001;
+					var newYield = .05;
+					for (var i = 0; i < duration; i++) {
+						var y = (i/duration >= .9) ? newYield : yieldTime;
 						inMotion = true;
 						if (shiftObject != null) {
 							shiftObject.transform.Translate(vect * Time.deltaTime * shift);
-							//Vector3.forward * Time.deltaTime * shift);
 						}
-						yield WaitForSeconds(.005);
+						yield WaitForSeconds(y);
 					}
 				}
 				inMotion = false;
@@ -344,11 +347,15 @@ function interact() {
 			var ladder2 = GameObject.Find("ladder2");
 			var angle = (raised) ? -25 : 25; 
 			var vect = getVect();
-			for (var i = 0; i < 1/Time.deltaTime; i++) {
+			var duration = 1/Time.deltaTime;
+			var yieldTime = .01;
+			var newYield = .1;
+			for (var i = 0; i < duration; i++) {
+				var y = (i/duration >= .9) ? newYield : yieldTime;
 				inMotion = true;
 				ladder1.transform.Rotate(vect*angle*Time.deltaTime);
 				ladder2.transform.Rotate(vect*angle*Time.deltaTime);
-				yield WaitForSeconds(.01);
+				yield WaitForSeconds(y);
 			}
 			inMotion = false;
 			raised = !raised;
@@ -361,9 +368,10 @@ function interact() {
 			var shift_chair = GameObject.Find("Shift Chair");
 			vect = getVect();
 			for (i = 0; i < 1/Time.deltaTime; i++) {
+				y = (i/duration >= .9) ? newYield : yieldTime;
 				inMotion = true;
 				shift_chair.transform.Rotate(Vector3.down*90*Time.deltaTime);
-				yield WaitForSeconds(.01);
+				yield WaitForSeconds(y);
 			}
 			inMotion = false;
 		}
