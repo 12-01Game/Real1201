@@ -181,9 +181,15 @@ function RemoveShadow() {
  *	for the shadow to reside on.
  */
 function ActivateShadow() {
-	// Define vertices
+	CreateVerticalShadow();
 	
-	// Create vertical wall shadow
+	// create floor shadow if object is below eye level
+	if(!isLifted){	
+		CreateHorizontalShadow();
+	}	
+}
+function CreateVerticalShadow(){
+// Create vertical wall shadow
 	shadowV = new GameObject(gameObject.name + "_Shadow_V", MeshRenderer, MeshFilter, MeshCollider);
 	shadowV.tag = "Shadow";
 	
@@ -216,40 +222,38 @@ function ActivateShadow() {
 		
 	var meshFilterVert : MeshFilter = shadowV.GetComponent("MeshFilter");
 	meshFilterVert.sharedMesh = shadowMeshV;
+}
+function CreateHorizontalShadow(){
+	shadowH = new GameObject(gameObject.name + "_Shadow_H", MeshRenderer, MeshFilter, MeshCollider);
+	shadowH.tag = "Shadow";
 	
-	// create floor shadow if object is below eye level
-	if(!isLifted){	
-		shadowH = new GameObject(gameObject.name + "_Shadow_H", MeshRenderer, MeshFilter, MeshCollider);
-		shadowH.tag = "Shadow";
-		
-		shadowMeshH = new Mesh();	// Make a new shadow mesh
-		shadowMeshH.name = gameObject.name + "_Shadow_Mesh_H";
-		shadowMeshH.vertices = [Vector3(objRightX, objFloorY, objBackZ + objToWallDistance),
-						   Vector3(objRightX - objWidth, objFloorY, objBackZ + objToWallDistance),
-						   Vector3(objRightX - objWidth, objFloorY, objBackZ),
-						   Vector3(objRightX, objFloorY, objBackZ)];  					   
-							   
-		// Define triangles
-		if (reverseTriWinding) {
-			shadowMeshH.triangles = [2, 1, 0, 3, 2, 0];
-		}
-		else {
-			shadowMeshH.triangles = [0, 1, 2, 0, 2, 3];
-		}
-		
-		shadowMeshH.RecalculateNormals();	// Define normals
-		shadowMeshH.uv = [Vector2 (0, 0), Vector2 (0, 1), Vector2(1, 1), Vector2 (1, 0)];	// Define UVs
-		
-		// Add a collider to the shadow so that Hank can touch it
-		
-		var meshColliderH : MeshCollider = shadowH.GetComponent("MeshCollider");
-		meshColliderH.sharedMesh = shadowMeshH;
-		shadowH.renderer.material = shadowTexture;
-		
-		
-		var meshFilterHor : MeshFilter = shadowH.GetComponent("MeshFilter");
-		meshFilterHor.sharedMesh = shadowMeshH;
-	}	
+	shadowMeshH = new Mesh();	// Make a new shadow mesh
+	shadowMeshH.name = gameObject.name + "_Shadow_Mesh_H";
+	shadowMeshH.vertices = [Vector3(objRightX, objFloorY, objBackZ + objToWallDistance),
+					   Vector3(objRightX - objWidth, objFloorY, objBackZ + objToWallDistance),
+					   Vector3(objRightX - objWidth, objFloorY, objBackZ),
+					   Vector3(objRightX, objFloorY, objBackZ)];  					   
+						   
+	// Define triangles
+	if (reverseTriWinding) {
+		shadowMeshH.triangles = [2, 1, 0, 3, 2, 0];
+	}
+	else {
+		shadowMeshH.triangles = [0, 1, 2, 0, 2, 3];
+	}
+	
+	shadowMeshH.RecalculateNormals();	// Define normals
+	shadowMeshH.uv = [Vector2 (0, 0), Vector2 (0, 1), Vector2(1, 1), Vector2 (1, 0)];	// Define UVs
+	
+	// Add a collider to the shadow so that Hank can touch it
+	
+	var meshColliderH : MeshCollider = shadowH.GetComponent("MeshCollider");
+	meshColliderH.sharedMesh = shadowMeshH;
+	shadowH.renderer.material = shadowTexture;
+	
+	
+	var meshFilterHor : MeshFilter = shadowH.GetComponent("MeshFilter");
+	meshFilterHor.sharedMesh = shadowMeshH;
 }
 
 /*
@@ -294,6 +298,9 @@ function RepositionShadow() {
 	objFloorY = objOriginY - (objHeight / 2) + SHADOW_OFFSET;
 	objBackZ = objOriginZ + (objDepth / 2);
 	objFrontZ = objOriginZ - (objDepth / 2);
+	
+	if(shadowV == null)
+		CreateVerticalShadow();
 	
 	shadowMeshV.vertices = 
 		[Vector3(objRightX, objFloorY + heightScaleOffset, objBackZ + objToWallDistance),
@@ -439,9 +446,7 @@ function castFloorShadow(x: float, z: float){
 			   Vector3(rightX, objFloorY, nearRightZ)];
 
 	}
-	
-	colliderV.enabled = false;
-		
+	Destroy(shadowV);
 }
 
 function castWallShadow(x: float, z: float){
@@ -461,7 +466,7 @@ function castWallShadow(x: float, z: float){
 		var mFar = distX / distZ;
 		
 		newRight = objRightX - mFar * objToWallDistance;
-		newLeft = objLeftX + objWidth - mNear * objToWallDistance;
+		newLeft = objLeftX + objWidth / 2 - mNear * objToWallDistance;
 		
 		set_shadow_v_vertices(newRight, newLeft, objFloorY, newBack);
 		set_shadow_h_vertices(newRight, newLeft, objRightX, objLeftX, objFloorY, newBack, newBack, objFrontZ, objBackZ);
@@ -477,7 +482,7 @@ function castWallShadow(x: float, z: float){
 		
 		mFar = distX / distZ;
 		
-		newRight = objRightX - objWidth + mNear * objToWallDistance;
+		newRight = objRightX - objWidth / 2 + mNear * objToWallDistance;
 		newLeft = objLeftX + mFar * objToWallDistance;
 		
 		set_shadow_v_vertices(newRight, newLeft, objFloorY, newBack);
@@ -513,7 +518,6 @@ function castWallShadow(x: float, z: float){
 	}
 	
 	var w =  newRight - newLeft;
-	colliderV.enabled = true;
 	colliderV.size = Vector3(w, shadowDepth, shadowDepth);
 	colliderV.center = Vector3(newRight - w/2, objFloorY + objHeight - shadowDepth/2, newBack);
 		
@@ -579,10 +583,6 @@ function castElevatedShadow(x: float, y: float, z: float){
 	}
 
 	/* Different than set_shadow_v_vertices() because it is elevated */
-	Debug.Log("elevated");
-	Debug.Log(objOriginY);
-	Debug.Log(objHeight);
-
 	// This math is weird because the object center is not aligned
 	shadowMeshV.vertices = 
 		[Vector3(objRightX, objOriginY + objHeight, newBack),
@@ -598,7 +598,6 @@ function castElevatedShadow(x: float, y: float, z: float){
 	// 	   Vector3(newRight, objOriginY + mYZ * objDepth/2  , newBack)];
 		   
 	var w =  newRight - newLeft;
-	colliderV.enabled = true;
 	colliderV.size = Vector3(w, shadowDepth, shadowDepth);
 	colliderV.center = Vector3(newRight - w/2, objOriginY + 1.5 * objHeight - shadowDepth/2, newBack);
 	
@@ -623,64 +622,70 @@ function AddShadowCollisionDetection(){
 	
 }
 function PushPopCollision(){
-	colliderV.enabled = true;
-	var hankBounds : Bounds = getCombinedBounds(hank);
-	if(hankBounds.Intersects(colliderV.bounds)){
-		var hankBottom : float = hank.transform.position.y - hankBounds.size.y / 2;
-		var hankCenter : float = hank.transform.position.x;
-		var hankLeft : float = hank.transform.position.x - hankBounds.size.x / 2;
-		var hankRight : float = hank.transform.position.x + hankBounds.size.x / 2;
-		var colliderLeft : float = colliderV.center.x - colliderV.size.x / 2;
-		var colliderRight : float = colliderV.center.x + colliderV.size.x / 2;
-		var colliderCenter : float = colliderV.center.y;
-		if(hankBottom < colliderCenter - collisionThreshold){
-			if(hankCenter > colliderLeft){
-				if(hankCenter < colliderRight)
-					PushHankToTop();
-				else if(hankLeft < colliderRight)
-					PushHankToRight();
-			}else if(hankRight > colliderLeft)
-				PushHankToLeft();
-		}
-	}
-}
-function ShadowBlendCollision(){
-	var hankBounds : Bounds = getCombinedBounds(hank);
-	var hankBottom : float = hank.transform.position.y - hankBounds.size.y / 2;
-	var colliderCenter : float = colliderV.center.y;
-	if(hankBottom < colliderCenter - collisionThreshold){
-		colliderV.enabled = false;
-	}else{
+	try{
 		colliderV.enabled = true;
-	}
-}
-private static var last_x : int = -1;
-function QuicksandCollision(){
-	colliderV.enabled = true;
-	var hankBounds : Bounds = getCombinedBounds(hank);
-	if(hankBounds.Intersects(colliderV.bounds)){
-		var hankBottom : float = hank.transform.position.y - hankBounds.size.y / 2;
-		var hankCenter : float = hank.transform.position.x;
-		var hankLeft : float = hank.transform.position.x - hankBounds.size.x / 2;
-		var hankRight : float = hank.transform.position.x + hankBounds.size.x / 2;
-		var colliderLeft : float = colliderV.center.x - colliderV.size.x / 2;
-		var colliderRight : float = colliderV.center.x + colliderV.size.x / 2;
-		var colliderCenter : float = colliderV.center.y;
-		if(hankBottom < colliderCenter - collisionThreshold){
-			if(last_x == -1)
-				last_x = hank.transform.position.x;
-			else{
+		var hankBounds : Bounds = getCombinedBounds(hank);
+		if(hankBounds.Intersects(colliderV.bounds)){
+			var hankBottom : float = hank.transform.position.y - hankBounds.size.y / 2;
+			var hankCenter : float = hank.transform.position.x;
+			var hankLeft : float = hank.transform.position.x - hankBounds.size.x / 2;
+			var hankRight : float = hank.transform.position.x + hankBounds.size.x / 2;
+			var colliderLeft : float = colliderV.center.x - colliderV.size.x / 2;
+			var colliderRight : float = colliderV.center.x + colliderV.size.x / 2;
+			var colliderCenter : float = colliderV.center.y;
+			if(hankBottom < colliderCenter - collisionThreshold){
 				if(hankCenter > colliderLeft){
 					if(hankCenter < colliderRight)
-						hank.transform.position.x = (hank.transform.position.x + last_x) / 2;
+						PushHankToTop();
 					else if(hankLeft < colliderRight)
 						PushHankToRight();
 				}else if(hankRight > colliderLeft)
 					PushHankToLeft();
-				}
+			}
 		}
-	}else
-		last_x = -1;
+	}catch(exception){}
+}
+function ShadowBlendCollision(){
+	try{
+		var hankBounds : Bounds = getCombinedBounds(hank);
+		var hankBottom : float = hank.transform.position.y - hankBounds.size.y / 2;
+		var colliderCenter : float = colliderV.center.y;
+		if(hankBottom < colliderCenter - collisionThreshold){
+			colliderV.enabled = false;
+		}else{
+			colliderV.enabled = true;
+		}
+	}catch(exception){}
+}
+private static var last_x : int = -1;
+function QuicksandCollision(){
+	try{
+		colliderV.enabled = true;
+		var hankBounds : Bounds = getCombinedBounds(hank);
+		if(hankBounds.Intersects(colliderV.bounds)){
+			var hankBottom : float = hank.transform.position.y - hankBounds.size.y / 2;
+			var hankCenter : float = hank.transform.position.x;
+			var hankLeft : float = hank.transform.position.x - hankBounds.size.x / 2;
+			var hankRight : float = hank.transform.position.x + hankBounds.size.x / 2;
+			var colliderLeft : float = colliderV.center.x - colliderV.size.x / 2;
+			var colliderRight : float = colliderV.center.x + colliderV.size.x / 2;
+			var colliderCenter : float = colliderV.center.y;
+			if(hankBottom < colliderCenter - collisionThreshold){
+				if(last_x == -1)
+					last_x = hank.transform.position.x;
+				else{
+					if(hankCenter > colliderLeft){
+						if(hankCenter < colliderRight)
+							hank.transform.position.x = (hank.transform.position.x + last_x) / 2;
+						else if(hankLeft < colliderRight)
+							PushHankToRight();
+					}else if(hankRight > colliderLeft)
+						PushHankToLeft();
+					}
+			}
+		}else
+			last_x = -1;
+	}catch(exception){}
 }
 function PushHankToTop(){
 	var hankBounds : Bounds = getCombinedBounds(hank);
