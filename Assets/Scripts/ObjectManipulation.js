@@ -62,7 +62,7 @@ private var things_to_shift;
 private var all_objects;
 
 /*Movement of Sam */
-private var movement : CharacterScript;
+private var movement : CharacterScript4Sam;
 
 /*Initial speed of Sam */
 private var speed : float;
@@ -136,7 +136,7 @@ function Start () {
 	bc_collider = go.GetComponent(BoxCollider);
 	grab = false;
 	secondGrab = false;
-	movement = GetComponent(CharacterScript);
+	movement = GetComponent(CharacterScript4Sam);
 	speed = movement.speed;	
 }
 
@@ -283,7 +283,7 @@ function pushnpull() {
 			/*granularity too large - SAM runs into box before box moves causing stuttering
 				Current fix - somewhat larger trigger zone for object 
 			*/
-			var delta = CharacterScript.xMotion*Time.deltaTime * vect;
+			var delta = CharacterScript4Sam.xMotion*Time.deltaTime * vect;
 			
 			/*shift position of object and copies by movement altered by -1 if necessary*/
 			
