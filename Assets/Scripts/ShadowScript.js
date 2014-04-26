@@ -10,12 +10,10 @@
  */
 
 #pragma strict
-
-
  
 // Variable Settings
 var collisionMode				: int 		= 2; 	// 0 = PushPop, 1 = Shadow Blend, 2 = Quicksand
-var collisionThreshold 			:float 		= .5;
+var collisionThreshold 			: float 	= .5;
 
 var shadowTexture 				: Material;			// Stores the texture for the shadow
 var reverseTriWinding 			: boolean;			// This prevents the "backfacing" problem
@@ -33,13 +31,19 @@ private final var SHADOW_OFFSET		: float		= 0.01;			// distance shadow is offset
 private final var triggerDistance 	: float 	= 10.0;			// distance at which Shadow Skewing is triggered
 
 // Object properties
-private var objWidth 			: float;			// GameObject's width
-private var objHeight 			: float;			// GameObject's height
-private var objDepth 			: float;			// GameObject's depth
+private var objWidth 			: float;
+private var objHeight 			: float;
+private var objDepth 			: float;
+private var objOriginX 			: float;
+private var objOriginY 			: float;
+private var objOriginZ 			: float;
+private var objRightX 			: float;
+private var objLeftX 			: float;
+private var objFloorY 			: float;
+private var objBackZ 			: float;
+private var objFrontZ 			: float;
+
 private var heightScaleOffset 	: float;			// The height offset produced by scaling
-private var objOriginX 			: float;			// where the GameObject is in space
-private var objOriginY 			: float;			// where the GameObject is in space
-private var objOriginZ 			: float;			// where the GameObject is in space
 private var objToWallDistance 	: float;			// how far away the GameObject's back edge is from the wall
 private var isLifted			: boolean;			// whether or not the object is lifted above eye-level (no need for Hshadow)
 
@@ -55,7 +59,7 @@ private var isCastByLight		: boolean = false;
 // Environment variables
 private var player 				: Transform;		// the player object to detect distance
 private var hank 				: GameObject;		// the player object to detect distance
-private var dist 				: float;			// player distance from gameobject
+private var player2ObjDistance 				: float;			// player distance from gameobject
 
 /*
  *	Start()
@@ -69,7 +73,7 @@ function Start () {
 }
 
 function DefineDimensions(){
-	if(gameObject.name.Contains("WallShelf")){
+	if(gameObject.name.Contains("Wallshelf")){
 		var combinedBounds : Bounds = getCombinedBounds(gameObject);
 		
 		objWidth = combinedBounds.size.x;
@@ -79,10 +83,19 @@ function DefineDimensions(){
 		objOriginX = combinedBounds.center.x;
 		objOriginY = combinedBounds.center.y;
 		objOriginZ = combinedBounds.center.z;
+		
+		// var boxCollider : BoxCollider = gameObject.GetComponent("BoxCollider");
+
+		// objWidth = boxCollider.bounds.size.x;
+		// objHeight = boxCollider.bounds.size.y;
+		// objDepth = boxCollider.bounds.size.z;
+
+		
+		// objOriginX = boxCollider.transform.position.x;
+		// objOriginY = boxCollider.transform.position.y;
+		// objOriginZ = boxCollider.transform.position.z;
 	
 	}else{
-
-		// Initialize GameObject properties
 		objWidth = renderer.bounds.size.x;
 		objHeight = renderer.bounds.size.y;
 		objDepth = renderer.bounds.size.z;
@@ -92,11 +105,18 @@ function DefineDimensions(){
 		objOriginZ = renderer.transform.position.z;
 	}
 	
+	objRightX = objOriginX + (objWidth / 2);
+	objLeftX = objOriginX - (objWidth / 2);
+	objFloorY = objOriginY - (objHeight / 2) + SHADOW_OFFSET;
+	objBackZ = objOriginZ + (objDepth / 2);
+	objFrontZ = objOriginZ - (objDepth / 2);
+	
 	// Do some scaling
 	heightScaleOffset = ((objHeight * scalingHeightVar) - objHeight) / 2;
 	objWidth = objWidth * scalingWidthVar;
 	objHeight = objHeight * scalingWidthVar;	
 	
+	// Determine if the object is lifted for proper shadow rendering
 	if(objOriginY >= player.renderer.bounds.size.y) isLifted = true;
 	else isLifted = false;
 	
@@ -115,24 +135,22 @@ function getCombinedBounds(obj : GameObject){
 	return combinedBounds;
 }
 /*
- *	Update()
- *
- *	Called as the object updates in realtime.
+ *	Update() - Called as the object updates in realtime.
  */
 function Update () {
 	if (isVisible) {
 		VerifyShadow();		// Verify the shadow's location based on its parent object
 	}
 }
+/*
+ *	LateUpdate() - Called after objects have finished Update() 
+ *
+ *	Explicitly skewing the shadow after the player has moved so it doesn't freak out
+ */
 function LateUpdate() {
 	SkewShadow();
 }
 
-/*
- *	CreateShadow()
- *
- *	Explicitly tells the ShadowScript to begin generating collidable shadows for this object.
- */
 function CreateShadow() {
 	if (!isVisible) {
 		isVisible = true;
@@ -140,11 +158,6 @@ function CreateShadow() {
 	}
 }
 
-/*
- *	RemoveShadow()
- *
- *	Explicitly tells the ShadowScript to remove collidable shadows for this object.
- */
 function RemoveShadow() {
 	if (!isCastByLight && isVisible) {
 		isVisible = false;
@@ -169,9 +182,6 @@ function RemoveShadow() {
  */
 function ActivateShadow() {
 	// Define vertices
-	var xRight : float = objOriginX + (objWidth / 2);
-	var yFloor : float = objOriginY - (objHeight / 2) + SHADOW_OFFSET;
-	var zBack : float = objOriginZ + (objDepth / 2);
 	
 	// Create vertical wall shadow
 	shadowV = new GameObject(gameObject.name + "_Shadow_V", MeshRenderer, MeshFilter, MeshCollider);
@@ -179,15 +189,14 @@ function ActivateShadow() {
 	
 	colliderV = shadowV.AddComponent("BoxCollider");
 	colliderV.size = Vector3(objWidth, objHeight, shadowDepth);
-	colliderV.center = Vector3(xRight - objWidth/2, yFloor + objHeight/2, zBack + objToWallDistance);
+	colliderV.center = Vector3(objRightX - objWidth/2, objFloorY + objHeight/2, objBackZ + objToWallDistance);
 	
 	shadowMeshV = new Mesh();	// Make a new shadow mesh
 	shadowMeshV.name = gameObject.name + "_Shadow_Mesh_V";
-	shadowMeshV.vertices = [Vector3(xRight, yFloor + heightScaleOffset, zBack + objToWallDistance),
-					   Vector3(xRight - objWidth, yFloor + heightScaleOffset, zBack + objToWallDistance),
-					   Vector3(xRight - objWidth, yFloor + objHeight + heightScaleOffset, zBack + objToWallDistance),
-					   Vector3(xRight, yFloor + objHeight + heightScaleOffset, zBack + objToWallDistance)];	
-					   
+	shadowMeshV.vertices = [Vector3(objRightX, objFloorY + heightScaleOffset, objBackZ + objToWallDistance),
+					   Vector3(objRightX - objWidth, objFloorY + heightScaleOffset, objBackZ + objToWallDistance),
+					   Vector3(objRightX - objWidth, objFloorY + objHeight + heightScaleOffset, objBackZ + objToWallDistance),
+					   Vector3(objRightX, objFloorY + objHeight + heightScaleOffset, objBackZ + objToWallDistance)];	
 			   
 	// Define triangles
 	if (reverseTriWinding) {
@@ -200,13 +209,11 @@ function ActivateShadow() {
 	shadowMeshV.RecalculateNormals();	// Define normals
 	shadowMeshV.uv = [Vector2 (0, 0), Vector2 (0, 1), Vector2(1, 1), Vector2 (1, 0)];	// Define UVs
 	
-	
 	// Add a collider to the shadow so that Hank can touch it
 	var meshColliderV : MeshCollider = shadowV.GetComponent("MeshCollider");
 	meshColliderV.sharedMesh = shadowMeshV;
 	shadowV.renderer.material = shadowTexture;
-	
-	
+		
 	var meshFilterVert : MeshFilter = shadowV.GetComponent("MeshFilter");
 	meshFilterVert.sharedMesh = shadowMeshV;
 	
@@ -217,10 +224,10 @@ function ActivateShadow() {
 		
 		shadowMeshH = new Mesh();	// Make a new shadow mesh
 		shadowMeshH.name = gameObject.name + "_Shadow_Mesh_H";
-		shadowMeshH.vertices = [Vector3(xRight, yFloor, zBack + objToWallDistance),
-						   Vector3(xRight - objWidth, yFloor, zBack + objToWallDistance),
-						   Vector3(xRight - objWidth, yFloor, zBack),
-						   Vector3(xRight, yFloor, zBack)];  					   
+		shadowMeshH.vertices = [Vector3(objRightX, objFloorY, objBackZ + objToWallDistance),
+						   Vector3(objRightX - objWidth, objFloorY, objBackZ + objToWallDistance),
+						   Vector3(objRightX - objWidth, objFloorY, objBackZ),
+						   Vector3(objRightX, objFloorY, objBackZ)];  					   
 							   
 		// Define triangles
 		if (reverseTriWinding) {
@@ -282,50 +289,53 @@ function VerifyShadow() {
  *	NEVER CALL THIS FUNCTION DIRECTLY (use VerifyShadow() instead)
  */
 function RepositionShadow() {
-	
-	// Define vertices
-	var xRight : float = objOriginX - (objWidth / 2);
-	var yFloor : float = objOriginY - (objHeight / 2) + SHADOW_OFFSET;
-	var zBack : float = objOriginZ - (objDepth / 2);
+	objRightX = objOriginX + (objWidth / 2);
+	objLeftX = objOriginX - (objWidth / 2);
+	objFloorY = objOriginY - (objHeight / 2) + SHADOW_OFFSET;
+	objBackZ = objOriginZ + (objDepth / 2);
+	objFrontZ = objOriginZ - (objDepth / 2);
 	
 	shadowMeshV.vertices = 
-		[Vector3(xRight, yFloor + heightScaleOffset, zBack + objToWallDistance),
-		   Vector3(xRight - objWidth, yFloor + heightScaleOffset, zBack + objToWallDistance),
-		   Vector3(xRight - objWidth, yFloor + objHeight + heightScaleOffset, zBack + objToWallDistance),
-		   Vector3(xRight, yFloor + objHeight + heightScaleOffset, zBack + objToWallDistance)];
+		[Vector3(objRightX, objFloorY + heightScaleOffset, objBackZ + objToWallDistance),
+		   Vector3(objRightX - objWidth, objFloorY + heightScaleOffset, objBackZ + objToWallDistance),
+		   Vector3(objRightX - objWidth, objFloorY + objHeight + heightScaleOffset, objBackZ + objToWallDistance),
+		   Vector3(objRightX, objFloorY + objHeight + heightScaleOffset, objBackZ + objToWallDistance)];
 		   
-	colliderV.center = Vector3(xRight - objWidth/2, yFloor + objHeight/2, zBack + objToWallDistance);
-						   
-	if(!isLifted){
-		shadowMeshH.vertices = 
-			[Vector3(xRight, yFloor, zBack + objToWallDistance),
-			   Vector3(xRight - objWidth, yFloor, zBack + objToWallDistance),
-			   Vector3(xRight - objWidth, yFloor, zBack),
-			   Vector3(xRight, yFloor, zBack)];  
-	}
-						   
+	colliderV.center = Vector3(objRightX - objWidth/2, objFloorY + objHeight/2, objBackZ + objToWallDistance);
+										   
 	// Define triangles
 	if (reverseTriWinding) {
 		shadowMeshV.triangles = [2, 1, 0, 3, 2, 0];
-		if(!isLifted)shadowMeshH.triangles = [2, 1, 0, 3, 2, 0];
 	}
 	else {
 		shadowMeshV.triangles = [0, 1, 2, 0, 2, 3];
-		if(!isLifted)shadowMeshH.triangles = [0, 1, 2, 0, 2, 3];
 	}
 	
 	shadowMeshV.RecalculateNormals();	// Define normals
 	shadowMeshV.uv = [Vector2 (0, 0), Vector2 (0, 1), Vector2(1, 1), Vector2 (1, 0)];	// Define UVs
 	
-	if(!isLifted){
-		shadowMeshH.RecalculateNormals();	// Define normals
-		shadowMeshH.uv = [Vector2 (0, 0), Vector2 (0, 1), Vector2(1, 1), Vector2 (1, 0)];	// Define UVs
-	}
 	// Apply mesh
 	shadowV.GetComponent(MeshFilter).mesh = shadowMeshV;
 	shadowV.renderer.material = shadowTexture;
-	
+	      
 	if(!isLifted){
+		shadowMeshH.vertices = 
+			[Vector3(objRightX, objFloorY, objBackZ + objToWallDistance),
+			   Vector3(objRightX - objWidth, objFloorY, objBackZ + objToWallDistance),
+			   Vector3(objRightX - objWidth, objFloorY, objBackZ),
+			   Vector3(objRightX, objFloorY, objBackZ)];  
+					   
+		// Define triangles
+		if (reverseTriWinding) {
+			shadowMeshH.triangles = [2, 1, 0, 3, 2, 0];
+		}
+		else {
+			shadowMeshH.triangles = [0, 1, 2, 0, 2, 3];
+		}
+		
+		shadowMeshH.RecalculateNormals();	// Define normals
+		shadowMeshH.uv = [Vector2 (0, 0), Vector2 (0, 1), Vector2(1, 1), Vector2 (1, 0)];	// Define UVs
+
 		shadowH.GetComponent(MeshFilter).mesh = shadowMeshH;
 		shadowH.renderer.material = shadowTexture;
 	}
@@ -340,195 +350,260 @@ function RepositionShadow() {
  *	Skews the shadow in relation to the player's position 
  */
 function SkewShadow() {
-	dist = player.position.x - objOriginX;
-	var facing : boolean = isFacing();
-	if(nearestLight != null && (!facing || Mathf.Abs(dist) > Mathf.Abs(objOriginX - nearestLight.position.x))){
+	player2ObjDistance = player.position.x - objOriginX;
+	var facing : boolean = playerIsFacing();
+	if(nearestLight != null && (!facing || Mathf.Abs(player2ObjDistance) > Mathf.Abs(objOriginX - nearestLight.position.x))){
 		if(!isCastByLight){
 			isCastByLight = true;
-			dist = objOriginX - nearestLight.position.x;
-			castShadow(nearestLight.position.x, nearestLight.position.z);
+			player2ObjDistance = objOriginX - nearestLight.position.x;
+			castShadow(nearestLight.position.x, nearestLight.position.y, nearestLight.position.z);
 		}
 	}else{
-		if(facing && dist < triggerDistance && dist > triggerDistance * -1){
+		if(facing && player2ObjDistance < triggerDistance && player2ObjDistance > triggerDistance * -1){
 			isCastByLight = false;
-			castShadow(player.position.x, player.position.z);
+			castShadow(player.position.x, player.position.y, player.position.z);
 		}else
 			RemoveShadow();
 	}	   
 }
 
-function castShadow(x: float, z: float){
-
+function castShadow(x: float, y: float, z: float){
 	CreateShadow();
 	
-	var xRight : float = objOriginX + (objWidth / 2);
-	var xLeft : float = objOriginX - (objWidth / 2);
-	var yFloor : float = objOriginY - (objHeight / 2) + SHADOW_OFFSET;
-	var zBack : float = objOriginZ + (objDepth / 2);
-	var zFront : float = objOriginZ - (objDepth / 2);
+	if(isLifted) castElevatedShadow(x,y,z);
+	else if(objToWallDistance > 5) castFloorShadow(x,z);
+	else castWallShadow(x,z);
 	
-	var newBack : float = zBack + objToWallDistance;
+	AddShadowCollisionDetection();
+}
+function set_shadow_v_vertices(newRight: float, newLeft: float, objFloorY: float, newBack: float){
+	shadowMeshV.vertices = 
+		[Vector3(newRight, objFloorY, newBack),
+		   Vector3(newLeft, objFloorY, newBack),
+		   Vector3(newLeft, objFloorY + objHeight, newBack),
+		   Vector3(newRight, objFloorY + objHeight, newBack)];
+}
+function set_shadow_h_vertices(farRightX: float, farLeftX: float, nearRightX: float, nearLeftX: float, 
+	objFloorY: float, farRightZ: float, farLeftZ: float, nearLeftZ: float, nearRightZ: float){
+
+	shadowMeshH.vertices = 
+		[Vector3(farRightX, objFloorY, farRightZ),
+		   Vector3(farLeftX, objFloorY, farLeftZ),
+		   Vector3(nearLeftX, objFloorY, nearLeftZ),
+		   Vector3(nearRightX, objFloorY, nearRightZ)];
+		   
+}
+function castFloorShadow(x: float, z: float){
+	if(player2ObjDistance > objWidth / 2){ 			// on the right side of gameobject
+		var distX = x - objRightX;
+		var distZ = z - objFrontZ;
+		
+		var mNear = distZ / distX;
+		
+		distZ = z - objBackZ;
+		
+		var mFar = distZ / distX;
+		
+		var leftX : float = objRightX - triggerDistance  * 1.5 + Mathf.Abs(distX)/3; // easing
+		var farLeftZ : float = objBackZ - mFar * player2ObjDistance;
+		var nearLeftZ : float = objFrontZ - mNear * player2ObjDistance;
+		
+		set_shadow_v_vertices(0, 0, 0, 0);
+
+		shadowMeshH.vertices = 
+			[Vector3(objRightX, objFloorY, objBackZ),
+			   Vector3(leftX, objFloorY, farLeftZ),
+			   Vector3(leftX, objFloorY, nearLeftZ),
+			   Vector3(objRightX, objFloorY, objFrontZ)];
+		
+	}else if (player2ObjDistance < objWidth / -2){	// on the left side of gameobject
+		distX = x - objLeftX;
+		distZ = z - objFrontZ;
+		
+		mNear = distZ / distX;
+		
+		distZ = z - objBackZ;
+		
+		mFar = distZ / distX;
+		
+		var rightX : float = objLeftX + triggerDistance * 1.5 - Mathf.Abs(distX)/3; // easing
+		var farRightZ : float = objBackZ - mFar * player2ObjDistance;
+		var nearRightZ : float = objFrontZ - mNear * player2ObjDistance;
+		
+		set_shadow_v_vertices(0, 0, 0, 0);
+		
+		shadowMeshH.vertices = 
+			[Vector3(rightX, objFloorY, farRightZ),
+			   Vector3(objLeftX, objFloorY, objBackZ),
+			   Vector3(objLeftX, objFloorY, objFrontZ),
+			   Vector3(rightX, objFloorY, nearRightZ)];
+
+	}
+	
+	colliderV.enabled = false;
+		
+}
+
+function castWallShadow(x: float, z: float){
+	var newBack : float = objBackZ + objToWallDistance;
 	var newRight : float;
 	var newLeft : float;
 	
-	if(dist > objWidth / 2){ // on the right side of gameobject
-		var distX = Mathf.Abs(x - xLeft);
-		var distZ = Mathf.Abs(z - zFront);
+	if(player2ObjDistance > objWidth / 2){ 		// on the right side of gameobject
+		var distX = Mathf.Abs(x - objLeftX);
+		var distZ = Mathf.Abs(z - objFrontZ);
 		
 		var mNear = distX / distZ;
 		
-		distX = Mathf.Abs(x - xRight);
-		distZ = Mathf.Abs(z - zBack);
+		distX = Mathf.Abs(x - objRightX);
+		distZ = Mathf.Abs(z - objBackZ);
 		
 		var mFar = distX / distZ;
-		if(!isLifted){	   
-			newRight = xRight - mFar * objToWallDistance;
-			newLeft = xLeft + objWidth - mNear * objToWallDistance;
-			
-			shadowMeshV.vertices = 
-				[Vector3(newRight, yFloor, newBack),
-				   Vector3(newLeft, yFloor, newBack),
-				   Vector3(newLeft, yFloor + objHeight, newBack),
-				   Vector3(newRight, yFloor + objHeight, newBack)];
-						   
-			shadowMeshH.vertices = 
-				[Vector3(newRight, yFloor, newBack),
-				   Vector3(newLeft, yFloor, newBack),
-				   Vector3(xLeft, yFloor, zFront),
-				   Vector3(xRight, yFloor, zBack)];
-				   
-		}else{
-			newRight = xRight - mFar * objDepth / 2;
-			newLeft = xLeft + objWidth - mNear * objDepth / 2;
-			
-			shadowMeshV.vertices = 
-				[Vector3(xRight, objOriginY + objHeight, newBack),
-				   Vector3(xLeft, objOriginY + objHeight, newBack),
-				   Vector3(newLeft, objOriginY + 1.5 * objHeight, newBack),
-				   Vector3(newRight, objOriginY + 1.5 * objHeight, newBack)];
-
-		}
-	}else if (dist < objWidth / -2){	// on the left side of gameobject
-		distX = Mathf.Abs(x - xRight);
-		distZ = Mathf.Abs(z - zFront);
+		
+		newRight = objRightX - mFar * objToWallDistance;
+		newLeft = objLeftX + objWidth - mNear * objToWallDistance;
+		
+		set_shadow_v_vertices(newRight, newLeft, objFloorY, newBack);
+		set_shadow_h_vertices(newRight, newLeft, objRightX, objLeftX, objFloorY, newBack, newBack, objFrontZ, objBackZ);
+		
+	}else if (player2ObjDistance < objWidth / -2){	// on the left side of gameobject
+		distX = Mathf.Abs(x - objRightX);
+		distZ = Mathf.Abs(z - objFrontZ);
 		
 		mNear = distX / distZ;
 		
-		distX = Mathf.Abs(x - xLeft);
-		distZ = Mathf.Abs(z - zBack);
+		distX = Mathf.Abs(x - objLeftX);
+		distZ = Mathf.Abs(z - objBackZ);
 		
 		mFar = distX / distZ;
 		
-		if(!isLifted){
-			newRight = xRight - objWidth + mNear * objToWallDistance;
-			newLeft = xLeft + mFar * objToWallDistance;
+		newRight = objRightX - objWidth + mNear * objToWallDistance;
+		newLeft = objLeftX + mFar * objToWallDistance;
 		
-			shadowMeshV.vertices = 
-				[Vector3(newRight, yFloor, newBack),
-				   Vector3(newLeft, yFloor, newBack),
-				   Vector3(newLeft, yFloor + objHeight, newBack),
-				   Vector3(newRight, yFloor + objHeight, newBack)];
-			
-			shadowMeshH.vertices = 
-				[Vector3(newRight, yFloor, newBack),
-				   Vector3(newLeft, yFloor, newBack),
-				   Vector3(xLeft, yFloor, zBack),
-				   Vector3(xRight, yFloor, zFront)];
-				   
-		}else{
-			newRight = xRight - objWidth + mNear * objDepth / 2;
-			newLeft = xLeft + mFar * objDepth / 2;
-			
-			shadowMeshV.vertices = 
-				[Vector3(xRight, objOriginY + objHeight, newBack),
-				   Vector3(xLeft, objOriginY + objHeight, newBack),
-				   Vector3(newLeft, objOriginY + 1.5 * objHeight, newBack),
-				   Vector3(newRight, objOriginY + 1.5 * objHeight, newBack)];
-				   
-		}
-	}else {	// within gameobject bounds
-		distX = Mathf.Abs(x - xRight);
-		distZ = Mathf.Abs(z - zFront);
+		set_shadow_v_vertices(newRight, newLeft, objFloorY, newBack);
+		set_shadow_h_vertices(newRight, newLeft, objRightX, objLeftX, objFloorY, newBack, newBack, objBackZ, objFrontZ);
+		
+	}else {								// within gameobject bounds
+		distX = Mathf.Abs(x - objRightX);
+		distZ = Mathf.Abs(z - objFrontZ);
 		
 		var mRight = distX / distZ;
 		
-		distX = Mathf.Abs(x - xLeft);
-		distZ = Mathf.Abs(z - zFront);
+		distX = Mathf.Abs(x - objLeftX);
+		distZ = Mathf.Abs(z - objFrontZ);
 		
 		var mLeft = distX / distZ;
-		if(dist < 0){		// left half of the game object
+		if(player2ObjDistance < 0){		// left half of the game object
+		
+			newRight = Mathf.Max(objRightX, objRightX - objWidth  + mRight * objToWallDistance);
+			newLeft = Mathf.Max(objLeftX, objLeftX - mLeft * objToWallDistance);
 			
-			if(isLifted){
+			set_shadow_v_vertices(newRight, newLeft, objFloorY, newBack);
+			set_shadow_h_vertices(newRight, newLeft, objRightX, objLeftX, objFloorY, newBack, newBack, objFrontZ, objFrontZ);
 			
-				newRight = xRight - objWidth + mRight * objDepth / 2;
-				newLeft = Mathf.Max(xLeft, xLeft - mLeft * objToWallDistance);
+		}else{							// right half of the game object
 			
-				shadowMeshV.vertices = 
-					[Vector3(xRight, objOriginY + objHeight, newBack),
-					   Vector3(xLeft, objOriginY + objHeight, newBack),
-					   Vector3(newLeft, objOriginY + 1.5 * objHeight, newBack),
-					   Vector3(newRight, objOriginY + 1.5 * objHeight, newBack)];
+			newRight = Mathf.Min(objRightX, objRightX + mRight * objToWallDistance);
+			newLeft = Mathf.Min(objLeftX, objLeftX + objWidth - mLeft * objToWallDistance);
 			
-			}else{
-			
-				newRight = xRight - objWidth  + mRight * objToWallDistance;
-				newLeft = Mathf.Max(xLeft, xLeft - mLeft * objToWallDistance);
-				
-				shadowMeshV.vertices = 
-					[Vector3(newRight, yFloor, newBack),
-					   Vector3(newLeft, yFloor, newBack),
-					   Vector3(newLeft, yFloor + objHeight, newBack),
-					   Vector3(newRight, yFloor + objHeight, newBack)];
-				
-				shadowMeshH.vertices = 
-					[Vector3(newRight, yFloor, newBack),
-					   Vector3(newLeft, yFloor, newBack),
-					   Vector3(xLeft, yFloor, zFront),
-					   Vector3(xRight, yFloor, zFront)];
-			}
-			
-		}else{		// right half of the game object
-			
-			if(isLifted){
-				newRight = Mathf.Min(xRight, xRight + mRight * objToWallDistance);
-				newLeft = xLeft + objWidth - mLeft * objDepth/2;
-				
-				shadowMeshV.vertices = 
-					[Vector3(xRight, objOriginY + objHeight, newBack),
-					   Vector3(xLeft, objOriginY + objHeight, newBack),
-					   Vector3(newLeft , objOriginY + 1.5 * objHeight, newBack),
-					   Vector3(newRight, objOriginY + 1.5 * objHeight, newBack)];
-			
-			}else{
-				newRight = Mathf.Min(xRight, xRight + mRight * objToWallDistance);
-				newLeft = xLeft + objWidth - mLeft * objToWallDistance;
-				
-				shadowMeshV.vertices = 
-					[Vector3(newRight, yFloor, newBack),
-					   Vector3(newLeft, yFloor, newBack),
-					   Vector3(newLeft, yFloor + objHeight, newBack),
-					   Vector3(newRight, yFloor + objHeight, newBack)];
-				
-				shadowMeshH.vertices = 
-					[Vector3(newRight, yFloor, newBack),
-					   Vector3(newLeft, yFloor, newBack),
-					   Vector3(xLeft, yFloor, zFront),
-					   Vector3(xRight, yFloor, zFront)];
-			}
+			set_shadow_v_vertices(newRight, newLeft, objFloorY, newBack);
+			set_shadow_h_vertices(newRight, newLeft, objRightX, objLeftX, objFloorY, newBack, newBack, objFrontZ, objFrontZ);
 			
 		}
 	}
 	
 	var w =  newRight - newLeft;
+	colliderV.enabled = true;
 	colliderV.size = Vector3(w, shadowDepth, shadowDepth);
-	if(isLifted)
-		colliderV.center = Vector3(newRight - w/2, objOriginY + 1.5 * objHeight - shadowDepth/2, newBack);
-	else
-		colliderV.center = Vector3(newRight - w/2, yFloor + objHeight - shadowDepth/2, newBack);
-	
-	ShadowCollisionDetection();
+	colliderV.center = Vector3(newRight - w/2, objFloorY + objHeight - shadowDepth/2, newBack);
+		
 }
-function ShadowCollisionDetection(){
+function castElevatedShadow(x: float, y: float, z: float){
+
+	var newBack : float = objBackZ + objToWallDistance;
+	var distY = Mathf.Abs(y - objOriginY);
+	var distZ = Mathf.Abs(z - objFrontZ);
+	var mYZ : float = distY / distZ;
+	
+	if(player2ObjDistance > objWidth / 2){ 			// on the right side of gameobject
+		var distX = Mathf.Abs(x - objLeftX);
+		
+		var mNear : float = distX / distZ;
+		
+		distX = Mathf.Abs(x - objRightX);
+		distZ = Mathf.Abs(z - objBackZ);
+		
+		var mFar : float = distX / distZ;
+		var newRight : float = objRightX - mFar * objDepth / 2;
+		var deltaX : float = (mNear * objDepth / 2 - objWidth);
+		var newLeft : float = objLeftX - deltaX;
+		newLeft = Mathf.Min(newLeft, objLeftX);
+
+	}else if (player2ObjDistance < objWidth / -2){	// on the left side of gameobject
+		distX = Mathf.Abs(x - objRightX);
+		
+		mNear = distX / distZ;
+		
+		distX = Mathf.Abs(x - objLeftX);
+		distZ = Mathf.Abs(z - objBackZ);
+		
+		mFar = distX / distZ;
+
+		deltaX = (mNear * objDepth / 2 - objWidth);
+
+		newRight = objRightX + deltaX;
+
+		newLeft = objLeftX + mFar * objDepth / 2;
+		newRight = Mathf.Max(newRight, objRightX);
+				   
+	}else {								// within gameobject bounds
+		distX = Mathf.Abs(x - objRightX);
+		
+		var mRight = distX / distZ;
+		
+		distX = Mathf.Abs(x - objLeftX);
+		distZ = Mathf.Abs(z - objFrontZ);
+		
+		var mLeft = distX / distZ;
+		if(player2ObjDistance < 0){					// left half of the game object
+			
+			newRight = objRightX - objWidth + mRight * objDepth / 2;
+			newLeft = Mathf.Max(objLeftX, objLeftX - mLeft * objToWallDistance);
+			
+		}else{							// right half of the game object
+			
+			newRight = Mathf.Min(objRightX, objRightX + mRight * objToWallDistance);
+			newLeft = objLeftX + objWidth - mLeft * objDepth/2;
+			
+		}
+	}
+
+	/* Different than set_shadow_v_vertices() because it is elevated */
+	Debug.Log("elevated");
+	Debug.Log(objOriginY);
+	Debug.Log(objHeight);
+
+	// This math is weird because the object center is not aligned
+	shadowMeshV.vertices = 
+		[Vector3(objRightX, objOriginY + objHeight, newBack),
+		   Vector3(objLeftX, objOriginY + objHeight, newBack),
+		   Vector3(newLeft, objOriginY + 1.5*objHeight , newBack),
+		   Vector3(newRight, objOriginY + 1.5*objHeight , newBack)];
+
+	/* This SHOULD use mYZ but something is off */
+	// shadowMeshV.vertices = 
+	// 	[Vector3(objRightX, objOriginY + objHeight, newBack),
+	// 	   Vector3(objLeftX, objOriginY + objHeight, newBack),
+	// 	   Vector3(newLeft, objOriginY + mYZ * objDepth/2 , newBack),
+	// 	   Vector3(newRight, objOriginY + mYZ * objDepth/2  , newBack)];
+		   
+	var w =  newRight - newLeft;
+	colliderV.enabled = true;
+	colliderV.size = Vector3(w, shadowDepth, shadowDepth);
+	colliderV.center = Vector3(newRight - w/2, objOriginY + 1.5 * objHeight - shadowDepth/2, newBack);
+	
+}
+function AddShadowCollisionDetection(){
 	switch(collisionMode){
 	case 0:	// PushPop
 		PushPopCollision();
@@ -624,14 +699,14 @@ function PushHankToRight(){
 }
 
 /*
- *	isFacing()
+ *	playerIsFacing()
  *
  *	Checks to see if the player is facing towards this object
  */
-function isFacing() {
+function playerIsFacing() {
 	var rotation : Quaternion = player.rotation;
 	var dot : float;
-	if (dist < 0){ 									// left side
+	if (player2ObjDistance < 0){ 									// left side
 		dot = Quaternion.Dot(rotation, Quaternion(0.0, 1.0, 0.0, 0.0)); 	// facing right
 	}else {											// right side
 		dot = Quaternion.Dot(rotation, Quaternion(0.0, 0.0, 0.0, -1.0));	// facing left
