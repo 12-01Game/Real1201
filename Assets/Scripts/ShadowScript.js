@@ -301,7 +301,7 @@ function VerifyShadow() {
  *	NEVER CALL THIS FUNCTION DIRECTLY (use VerifyShadow() instead)
  */
 function RepositionShadow() {
-	
+
 	objRightX = objOriginX + (objWidth / 2);
 	objLeftX = objOriginX - (objWidth / 2);
 	objFloorY = objOriginY - (objHeight / 2) + SHADOW_OFFSET;
@@ -432,7 +432,7 @@ function CastFloorShadow(x: float, z: float){
 
 		var mFar = distZ / distX;
 
-		var leftX : float = objRightX - triggerDistance  * 1.5 + Mathf.Abs(distX)/3; // easing
+		var leftX : float = objLeftX - 1 * triggerDistance;
 		var farLeftZ : float = objBackZ - mFar * player2ObjDistance;
 		var nearLeftZ : float = objFrontZ - mNear * player2ObjDistance;
 
@@ -452,7 +452,7 @@ function CastFloorShadow(x: float, z: float){
 
 		mFar = distZ / distX;
 
-		var rightX : float = objLeftX + triggerDistance * 1.5 - Mathf.Abs(distX)/3; // easing
+		var rightX : float = objRightX + 1 * triggerDistance; 
 		var farRightZ : float = objBackZ - mFar * player2ObjDistance;
 		var nearRightZ : float = objFrontZ - mNear * player2ObjDistance;
 
