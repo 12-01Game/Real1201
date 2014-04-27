@@ -27,7 +27,7 @@ var shadowDepth					: float 	= 1.0;
 private final var WALL_NAME 		: String 	= "BackWall";	// Name identifier for the back wall to calculate objDistanceToWall
 private final var SAM_NAME 			: String 	= "Sam";	// Name indentifier for the player to calculate distance from obj
 private final var HANK_NAME			: String 	= "Hank";
-private final var SHADOW_OFFSET		: float		= 0.01;			// distance shadow is offset from plane
+private final var SHADOW_OFFSET		: float		= 0.1;			// distance shadow is offset from plane
 private final var triggerDistance 	: float 	= 10.0;			// distance at which Shadow Skewing is triggered
 
 // Object properties
@@ -137,7 +137,7 @@ function Update () {
  *	Explicitly skewing the shadow after the player has moved so it doesn't freak out
  */
 function LateUpdate() {
-	SkewShadow();
+	ShadowDetection();
 }
 
 function CreateShadow() {
@@ -150,17 +150,19 @@ function CreateShadow() {
 function RemoveShadow() {
 	if (!isCastByLight && isVisible) {
 		isVisible = false;
-
-		// Remove shadow
-		Destroy(shadowV);
-		Destroy(shadowH);
-
-		// Erase local variables
-		shadowMeshV = null;
-		shadowMeshH = null;
-		shadowV = null;
-		shadowH = null;
+		RemoveShadowV();
+		RemoveShadowH();
 	}
+}
+function RemoveShadowV(){
+	Destroy(shadowV);
+	shadowMeshV = null;
+	shadowV = null;
+}
+function RemoveShadowH(){
+	Destroy(shadowH);
+	shadowMeshH = null;
+	shadowH = null;
 }
 
 /*
@@ -168,6 +170,8 @@ function RemoveShadow() {
  *
  *	Kicks off the shadow creation process by generating a Mesh
  *	for the shadow to reside on.
+ *
+ * 	DO NOT CALL THIS FUNCTION DIRECTLY
  */
 function ActivateShadow() {
 	CreateVerticalShadow();
@@ -177,6 +181,7 @@ function ActivateShadow() {
 		CreateHorizontalShadow();
 	}	
 }
+/* DO NOT CALL THIS FUNCTION DIRECTLY */
 function CreateVerticalShadow(){
 // Create vertical wall shadow
 	shadowV = new GameObject(gameObject.name + "_Shadow_V", MeshRenderer, MeshFilter, MeshCollider);
@@ -191,7 +196,7 @@ function CreateVerticalShadow(){
 	shadowMeshV.vertices = [Vector3(objRightX, objFloorY + heightScaleOffset, objBackZ + objToWallDistance),
 					   Vector3(objRightX - objWidth, objFloorY + heightScaleOffset, objBackZ + objToWallDistance),
 					   Vector3(objRightX - objWidth, objFloorY + objHeight + heightScaleOffset, objBackZ + objToWallDistance),
-					   Vector3(objRightX, objFloorY + objHeight + heightScaleOffset, objBackZ + objToWallDistance)];	
+					   Vector3(objRightX, objFloorY + objHeight + heightScaleOffset, objBackZ + objToWallDistance)];
 
 	// Define triangles
 	if (reverseTriWinding) {
@@ -212,6 +217,7 @@ function CreateVerticalShadow(){
 	var meshFilterVert : MeshFilter = shadowV.GetComponent("MeshFilter");
 	meshFilterVert.sharedMesh = shadowMeshV;
 }
+/* DO NOT CALL THIS FUNCTION DIRECTLY */
 function CreateHorizontalShadow(){
 	shadowH = new GameObject(gameObject.name + "_Shadow_H", MeshRenderer, MeshFilter, MeshCollider);
 	shadowH.tag = "Shadow";
@@ -256,9 +262,22 @@ function VerifyShadow() {
 
 	// If the position has changed, invalidate the shadow
 	// TODO: make sure this accounts for children-objects in complex shapes
-	var newX : float = renderer.transform.position.x;
-	var newY : float = renderer.transform.position.y;
-	var newZ : float = renderer.transform.position.z;
+
+	var newX : float;
+	var newY : float;
+	var newZ : float;
+
+	if(gameObject.name.Contains("Wallshelf")){
+		var combinedBounds : Bounds = getCombinedBounds(gameObject);
+		newX = combinedBounds.center.x;
+		newY = combinedBounds.center.y;
+		newZ = combinedBounds.center.z;
+
+	}else{
+		newX = renderer.transform.position.x;
+		newY = renderer.transform.position.y;
+		newZ = renderer.transform.position.z;
+	}
 	if (!newX.Equals(objOriginX) || !newY.Equals(objOriginY) || !newZ.Equals(objOriginZ)) {
 
 		// Respecify fields and invalidate
@@ -282,11 +301,15 @@ function VerifyShadow() {
  *	NEVER CALL THIS FUNCTION DIRECTLY (use VerifyShadow() instead)
  */
 function RepositionShadow() {
+	
 	objRightX = objOriginX + (objWidth / 2);
 	objLeftX = objOriginX - (objWidth / 2);
 	objFloorY = objOriginY - (objHeight / 2) + SHADOW_OFFSET;
 	objBackZ = objOriginZ + (objDepth / 2);
 	objFrontZ = objOriginZ - (objDepth / 2);
+
+	var wall : GameObject = GameObject.Find(WALL_NAME);
+	objToWallDistance = Mathf.Abs(wall.renderer.transform.position.z - objOriginZ - objDepth / 2) - SHADOW_OFFSET;
 
 	if(shadowV == null)
 		CreateVerticalShadow();
@@ -335,9 +358,6 @@ function RepositionShadow() {
 		shadowH.GetComponent(MeshFilter).mesh = shadowMeshH;
 		shadowH.renderer.material = shadowTexture;
 	}
-
-	var wall : GameObject = GameObject.Find(WALL_NAME);
-	objToWallDistance = Mathf.Abs(wall.renderer.transform.position.z - objOriginZ - objDepth / 2) - SHADOW_OFFSET;
 }
 
 /*
@@ -345,7 +365,7 @@ function RepositionShadow() {
  *
  *	Skews the shadow in relation to the player's position 
  */
-function SkewShadow() {
+function ShadowDetection() {
 	player2ObjDistance = player.position.x - objOriginX;
 	var facing : boolean = playerIsFacing();
 	if(nearestLight != null && (!facing || Mathf.Abs(player2ObjDistance) > Mathf.Abs(objOriginX - nearestLight.position.x))){
@@ -360,7 +380,7 @@ function SkewShadow() {
 			CastShadow(player.position.x, player.position.y, player.position.z);
 		}else
 			RemoveShadow();
-	}	   
+	}
 }
 
 function CastShadow(x: float, y: float, z: float){
@@ -401,6 +421,7 @@ function set_shadow_h_vertices(farRightX: float, farLeftX: float, nearRightX: fl
 
 }
 function CastFloorShadow(x: float, z: float){
+	RemoveShadowV();
 	if(player2ObjDistance > objWidth / 2){ 			// on the right side of gameobject
 		var distX = x - objRightX;
 		var distZ = z - objFrontZ;
@@ -414,8 +435,6 @@ function CastFloorShadow(x: float, z: float){
 		var leftX : float = objRightX - triggerDistance  * 1.5 + Mathf.Abs(distX)/3; // easing
 		var farLeftZ : float = objBackZ - mFar * player2ObjDistance;
 		var nearLeftZ : float = objFrontZ - mNear * player2ObjDistance;
-
-		set_shadow_v_vertices(0, 0, 0, 0);
 
 		shadowMeshH.vertices = 
 			[Vector3(objRightX, objFloorY, objBackZ),
@@ -437,8 +456,6 @@ function CastFloorShadow(x: float, z: float){
 		var farRightZ : float = objBackZ - mFar * player2ObjDistance;
 		var nearRightZ : float = objFrontZ - mNear * player2ObjDistance;
 
-		set_shadow_v_vertices(0, 0, 0, 0);
-
 		shadowMeshH.vertices = 
 			[Vector3(rightX, objFloorY, farRightZ),
 			   Vector3(objLeftX, objFloorY, objBackZ),
@@ -446,7 +463,6 @@ function CastFloorShadow(x: float, z: float){
 			   Vector3(rightX, objFloorY, nearRightZ)];
 
 	}
-	Destroy(shadowV);
 }
 
 function CastWallShadow(x: float, z: float){
@@ -571,13 +587,13 @@ function CastElevatedShadow(x: float, y: float, z: float){
 		var mLeft = distX / distZ;
 		if(player2ObjDistance < 0){					// left half of the game object
 
-			newRight = objRightX - objWidth + mRight * objDepth / 2;
+			newRight = Mathf.Max(objRightX, objRightX - objWidth + mRight * objDepth / 2);
 			newLeft = Mathf.Max(objLeftX, objLeftX - mLeft * objToWallDistance);
 
 		}else{							// right half of the game object
 
 			newRight = Mathf.Min(objRightX, objRightX + mRight * objToWallDistance);
-			newLeft = objLeftX + objWidth - mLeft * objDepth/2;
+			newLeft = Mathf.Min(objLeftX, objLeftX + objWidth - mLeft * objDepth/2);
 
 		}
 	}
@@ -585,10 +601,10 @@ function CastElevatedShadow(x: float, y: float, z: float){
 	/* Different than set_shadow_v_vertices() because it is elevated */
 	// This math is weird because the object center is not aligned
 	shadowMeshV.vertices = 
-		[Vector3(objRightX, objOriginY + objHeight, newBack),
-		   Vector3(objLeftX, objOriginY + objHeight, newBack),
-		   Vector3(newLeft, objOriginY + 1.5*objHeight , newBack),
-		   Vector3(newRight, objOriginY + 1.5*objHeight , newBack)];
+		[Vector3(objRightX, objOriginY + objHeight/2, newBack),
+		   Vector3(objLeftX, objOriginY + objHeight/2, newBack),
+		   Vector3(newLeft, objOriginY + objHeight , newBack),
+		   Vector3(newRight, objOriginY + objHeight , newBack)];
 
 	/* This SHOULD use mYZ but something is off */
 	// shadowMeshV.vertices = 
@@ -599,7 +615,7 @@ function CastElevatedShadow(x: float, y: float, z: float){
 
 	var w =  newRight - newLeft;
 	colliderV.size = Vector3(w, shadowDepth, shadowDepth);
-	colliderV.center = Vector3(newRight - w/2, objOriginY + 1.5 * objHeight - shadowDepth/2, newBack);
+	colliderV.center = Vector3(newRight - w/2, objOriginY + objHeight - shadowDepth/2, newBack);
 
 }
 function AddShadowCollisionDetection(){
@@ -714,7 +730,7 @@ function playerIsFacing() {
 	if (player2ObjDistance < 0){ 									// left side
 		dot = Quaternion.Dot(rotation, Quaternion(0.0, 1.0, 0.0, 0.0)); 	// facing right
 	}else {											// right side
-		dot = Quaternion.Dot(rotation, Quaternion(0.0, 0.0, 0.0, -1.0));	// facing left
+		dot = Quaternion.Dot(rotation, Quaternion(0.0, 0.0, 0.0, 1.0));	// facing left
 	}
 	if(dot > 0.5) return true;
 	else return false;
