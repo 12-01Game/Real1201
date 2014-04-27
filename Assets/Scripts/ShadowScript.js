@@ -84,17 +84,6 @@ function DefineDimensions(){
 		objOriginY = combinedBounds.center.y;
 		objOriginZ = combinedBounds.center.z;
 
-		// var boxCollider : BoxCollider = gameObject.GetComponent("BoxCollider");
-
-		// objWidth = boxCollider.bounds.size.x;
-		// objHeight = boxCollider.bounds.size.y;
-		// objDepth = boxCollider.bounds.size.z;
-
-
-		// objOriginX = boxCollider.transform.position.x;
-		// objOriginY = boxCollider.transform.position.y;
-		// objOriginZ = boxCollider.transform.position.z;
-
 	}else{
 		objWidth = renderer.bounds.size.x;
 		objHeight = renderer.bounds.size.y;
@@ -363,25 +352,36 @@ function SkewShadow() {
 		if(!isCastByLight){
 			isCastByLight = true;
 			player2ObjDistance = objOriginX - nearestLight.position.x;
-			castShadow(nearestLight.position.x, nearestLight.position.y, nearestLight.position.z);
+			CastShadow(nearestLight.position.x, nearestLight.position.y, nearestLight.position.z);
 		}
 	}else{
 		if(facing && player2ObjDistance < triggerDistance && player2ObjDistance > triggerDistance * -1){
 			isCastByLight = false;
-			castShadow(player.position.x, player.position.y, player.position.z);
+			CastShadow(player.position.x, player.position.y, player.position.z);
 		}else
 			RemoveShadow();
 	}	   
 }
 
-function castShadow(x: float, y: float, z: float){
+function CastShadow(x: float, y: float, z: float){
 	CreateShadow();
 
-	if(isLifted) castElevatedShadow(x,y,z);
-	else if(objToWallDistance > 5) castFloorShadow(x,z);
-	else castWallShadow(x,z);
+	if(isLifted) CastElevatedShadow(x,y,z);
+	else if(objToWallDistance > 5) CastFloorShadow(x,z);
+	else CastWallShadow(x,z);
 
 	AddShadowCollisionDetection();
+	ShadowFade();
+}
+
+function ShadowFade(){
+	var d : float = Mathf.Abs(player2ObjDistance);
+	try{
+		shadowV.renderer.material.color.a = 1 - d / triggerDistance;
+	}catch(exception){}
+	try{
+		shadowH.renderer.material.color.a = 1 - d / triggerDistance;
+	}catch(exception){}
 }
 function set_shadow_v_vertices(newRight: float, newLeft: float, objFloorY: float, newBack: float){
 	shadowMeshV.vertices = 
@@ -400,7 +400,7 @@ function set_shadow_h_vertices(farRightX: float, farLeftX: float, nearRightX: fl
 		   Vector3(nearRightX, objFloorY, nearRightZ)];
 
 }
-function castFloorShadow(x: float, z: float){
+function CastFloorShadow(x: float, z: float){
 	if(player2ObjDistance > objWidth / 2){ 			// on the right side of gameobject
 		var distX = x - objRightX;
 		var distZ = z - objFrontZ;
@@ -449,7 +449,7 @@ function castFloorShadow(x: float, z: float){
 	Destroy(shadowV);
 }
 
-function castWallShadow(x: float, z: float){
+function CastWallShadow(x: float, z: float){
 	var newBack : float = objBackZ + objToWallDistance;
 	var newRight : float;
 	var newLeft : float;
@@ -522,7 +522,7 @@ function castWallShadow(x: float, z: float){
 	colliderV.center = Vector3(newRight - w/2, objFloorY + objHeight - shadowDepth/2, newBack);
 
 }
-function castElevatedShadow(x: float, y: float, z: float){
+function CastElevatedShadow(x: float, y: float, z: float){
 
 	var newBack : float = objBackZ + objToWallDistance;
 	var distY = Mathf.Abs(y - objOriginY);
