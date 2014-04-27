@@ -38,6 +38,9 @@ private var shouldFaceAngle		: float = 180;
 private var currFaceAngle		: float = 0;
 
 private var anim				: Animation;
+private var idleMotion			: String = "standard_idle_1";
+private var walkMotion			: String = "walking";
+
 
 /*
  *	Awake()
@@ -60,7 +63,7 @@ function Update () {
 	// If the character can rotate, rotate smoothly (Sam)
 	if (canRotate && !ObjectManipulation.secondGrab && this.gameObject.tag == "Player") {
 		// Use slerp to provide smooth character rotation
-		var sfa = Quaternion.Euler(Vector3(0, shouldFaceAngle, 0));
+		var sfa = Quaternion.Euler(Vector3(0, shouldFaceAngle * -1, 0));
 		transform.rotation = Quaternion.Slerp(transform.rotation, sfa, rotationSpeed * Time.deltaTime);
 	}
 	
@@ -104,11 +107,11 @@ function Update () {
 		
 		// Play animation if there's xMotion
 		if (Mathf.Abs(xMotion) > 1) {
-			anim.Play("walking");
+			anim.Play(walkMotion);
 		}
 		else {
 			anim.Stop();
-			anim.Play("standard_idle_1");
+			anim.Play(idleMotion);
 		}
 	}
 	
