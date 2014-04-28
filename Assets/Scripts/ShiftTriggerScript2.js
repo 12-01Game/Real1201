@@ -1,6 +1,6 @@
 ﻿#pragma strict
 
-public var TEST : ObjectManipulation;
+private var TEST : ObjectManipulation;
 
 function Start () {
 }
@@ -17,7 +17,12 @@ function OnTriggerEnter(collision : Collider) {
 		//print(TEST.object);
 		TEST.secondGrab = true;
 		//print("triggered");
-		//TEST.object.gameObject.renderer.material.shader = Shader.Find("Outlined/Diffuse");//"Self-Illumin/Outlined Diffuse");
+		//TEST.object.gameObject.renderer.material.shader = Shader.Find("Self-Illumin/Outlined Diffuse");
+		var halo = TEST.object.GetComponent("Halo");
+		if (!halo) {
+			TEST.object.AddComponent("Halo");
+		}
+		RenderSettings.haloStrength = .6;
 	}
 }
 
@@ -26,6 +31,10 @@ function OnTriggerExit(collision : Collider) {
 		TEST.shiftable = false;
 		TEST.secondGrab = false;
 		//TEST.object.gameObject.renderer.material.shader = Shader.Find("Diffuse");
+		var halo = TEST.object.GetComponent("Halo");
+		if (halo) {
+			Destroy(halo);
+		}
 		TEST.object = null;
 	}
 }

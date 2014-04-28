@@ -58,8 +58,6 @@ public var style : GUISkin;
 //PRIVATE
 //------------------------------------------------------
 
-
-
 /*Things that are shiftable */
 private var things_to_shift;
 
@@ -93,6 +91,15 @@ private var shiftAxisUsed = false;
 /*States whether an activated or shifted object is in motion - 
 	Used to prevent spamming of activation or shifting of objects */
 private var inMotion = false;
+
+/*Whether the chair has been rotated the right way to shift into the table. */
+private var chair_objective = false;
+
+/*How many times the chair has been rotated */
+private var chair_rotation_count = 0;
+
+/*Says whether we want GUI messages to be shown */
+private var call_gui = false;
 
 /** 
 Initializes manipulable gameobject: go
@@ -237,6 +244,16 @@ function shift() {
 				shiftObject = object;
 				/*This section gives a delayed animation to the object shift */
 				if (shiftObject != null && shiftable) {
+					/*Initial objective checks */
+					if (shiftObject.name == "Shift Chair") {
+						if (chair_objective) {
+							call_gui = false;
+						}
+						else {
+							call_gui = true;
+							return;
+						}
+					}
 					var vect = getVect();
 					var duration = 1/Time.deltaTime;
 					var yieldTime = .0001;
@@ -389,10 +406,12 @@ function interact() {
 			for (i = 0; i < 1/Time.deltaTime; i++) {
 				y = (i/duration >= .9) ? newYield : yieldTime;
 				inMotion = true;
-				shift_chair.transform.Rotate(Vector3.down*90*Time.deltaTime);
+				shift_chair.transform.Rotate(Vector3.down*90.000*Time.deltaTime);
 				yield WaitForSeconds(y);
 			}
 			inMotion = false;
+			chair_rotation_count = (chair_rotation_count + 1) % 4;
+			chair_objective = (chair_rotation_count == 1) ? true : false;
 		}
 		
 		/*... More? Possibly for interacting with other various objects like when Sam 
@@ -428,7 +447,11 @@ function OnGUI() {
 		//GUI.color = Color.yellow;
 		//GUI.Box(Rect(9, 30, 500, 20), "hey", style);
 	}
-	GUI.Box(Rect(9, 30, 30, 20), "hey", style.customStyles[0]);
+	//GUI.Box(Rect(9, 30, 30, 20), "hey", style.customStyles[0]);
+	
+	if (call_gui)
+		GUI.Box(Rect(140, Screen.height-50, Screen.width-300, 120), "Hey Listen");
+
 }
 
 
