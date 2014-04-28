@@ -406,7 +406,7 @@ function interact() {
 			for (i = 0; i < 1/Time.deltaTime; i++) {
 				y = (i/duration >= .9) ? newYield : yieldTime;
 				inMotion = true;
-				shift_chair.transform.Rotate(Vector3.down*90.000*Time.deltaTime);
+				shift_chair.transform.Rotate(Vector3.down*90.000*Time.deltaTime); // clamp basedon curr angle
 				yield WaitForSeconds(y);
 			}
 			inMotion = false;
@@ -449,8 +449,9 @@ function OnGUI() {
 	}
 	//GUI.Box(Rect(9, 30, 30, 20), "hey", style.customStyles[0]);
 	
-	if (call_gui)
-		GUI.Box(Rect(140, Screen.height-50, Screen.width-300, 120), "Hey Listen");
+	//if (call_gui)
+		//GUI.Box(Rect(140, Screen.height-50, Screen.width-300, 120), "Hey Listen");
+		//GUI.Label(Rect(140, Screen.height-50, Screen.width-300, 120), "sample text");
 
 }
 

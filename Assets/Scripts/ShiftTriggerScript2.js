@@ -22,7 +22,6 @@ function OnTriggerEnter(collision : Collider) {
 		if (!halo) {
 			TEST.object.AddComponent("Halo");
 		}
-		RenderSettings.haloStrength = .6;
 	}
 }
 
