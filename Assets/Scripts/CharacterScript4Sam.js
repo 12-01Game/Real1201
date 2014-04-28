@@ -61,6 +61,9 @@ function Awake() {
 function Update () {
 
 	// If the character can rotate, rotate smoothly (Sam)
+	/*Checks are done to make sure he doesn't rotate while pulling - 
+		if done right, can make it look really stupid if he pulls mid rotation
+		need to add a sort of 'snap' to where if this happens, he snaps to the proper rotation */
 	if (canRotate && !ObjectManipulation.secondGrab && this.gameObject.tag == "Player") {
 		// Use slerp to provide smooth character rotation
 		var sfa = Quaternion.Euler(Vector3(0, shouldFaceAngle * -1, 0));
