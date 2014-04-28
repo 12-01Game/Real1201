@@ -61,7 +61,10 @@ function Awake() {
 function Update () {
 
 	// If the character can rotate, rotate smoothly (Sam)
-	if (canRotate && !ObjectManipulation.secondGrab && this.gameObject.tag == "Player") {
+	/*Checks are done to make sure he doesn't rotate while pulling - 
+		if done right, can make it look really stupid if he pulls mid rotation
+		need to add a sort of 'snap' to where if this happens, he snaps to the proper rotation */
+	if (canRotate && /*!ObjectManipulation.secondGrab*/ !Input.GetKeyDown("z")&& this.gameObject.tag == "Player") {
 		// Use slerp to provide smooth character rotation
 		var sfa = Quaternion.Euler(Vector3(0, shouldFaceAngle * -1, 0));
 		transform.rotation = Quaternion.Slerp(transform.rotation, sfa, rotationSpeed * Time.deltaTime);
@@ -76,9 +79,7 @@ function Update () {
 	var yMotion = 0;
 	
 	// Jumping...
-	if (controller.isGrounded && Input.GetButton("Jump") && canJump) {
-		print("isGrounded and jumping!");
-		
+	if (controller.isGrounded && Input.GetButton("Jump") && canJump) {		
 		// Reset gravity acceleration
 		fallFrames = 1;
 		yMotion = jumpForce;

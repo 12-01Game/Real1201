@@ -49,11 +49,14 @@ public static var levelNum = 0;
 /*The total number of levels present */
 public static final var NUMLEVELS = 2;
 
+/*Whether Sam is trying to grab */
+public static var grab : boolean;
+
+public var style : GUISkin;
+
+
 //PRIVATE
 //------------------------------------------------------
-
-/*Whether Sam is trying to grab */
-private var grab : boolean;
 
 /*Things that are shiftable */
 private var things_to_shift;
@@ -89,6 +92,15 @@ private var shiftAxisUsed = false;
 	Used to prevent spamming of activation or shifting of objects */
 private var inMotion = false;
 
+/*Whether the chair has been rotated the right way to shift into the table. */
+private var chair_objective = false;
+
+/*How many times the chair has been rotated */
+private var chair_rotation_count = 0;
+
+/*Says whether we want GUI messages to be shown */
+private var call_gui = false;
+
 /** 
 Initializes manipulable gameobject: go
 Sets go's tag to "Copy"
@@ -114,6 +126,14 @@ function Start () {
 	things_to_shift = GameObject.FindGameObjectsWithTag("pushpull");
 	
 	for (var thing : GameObject in things_to_shift) {
+		if (!thing.collider) {
+			for (var newThing : Transform in thing.transform){
+				if (newThing.gameObject.collider) {
+					thing = newThing.gameObject;
+					break;
+				}
+			}
+		}
 		var width = thing.collider.bounds.size.z / 2;
 		var Copy2 = new GameObject(thing + "_"+copy+"2");
 		Copy2.tag = copy;
@@ -200,16 +220,19 @@ function shift() {
 			var shift = determineShift();
 			var obj_copy = GameObject.Find(object+"_"+copy);
 			var obj_copy2 = GameObject.Find(object+"_"+copy+"2");
-			
 			// no intersection => shift object by 'shift' amount
 			bc_collider.center = new Vector3(object.collider.bounds.center.x,
 				object.collider.bounds.center.y,
 				(object.collider.bounds.center.z + shift));
+			bc_collider.size.x = object.collider.bounds.size.x;
+			bc_collider.size.y = object.collider.bounds.size.y;
+			bc_collider.size.z = object.collider.bounds.size.z;
 			var tempColl = go.collider;
 			if (shiftable) {
 				for (var obj : GameObject in all_objects) {
-					if (!obj.collider) // if no collider for the object, skip
+					if (!obj.collider && !obj.GetComponentInChildren(Collider)) { // if no collider for the object, skip}
 						continue;
+					}
 
 					if (obj.tag != "Floor" && obj.tag != "Shadow" && obj.tag != "Player2"
 					  && tempColl.bounds.Intersects(obj.collider.bounds)
@@ -220,7 +243,17 @@ function shift() {
 				}
 				shiftObject = object;
 				/*This section gives a delayed animation to the object shift */
-				if (shiftObject != null) {
+				if (shiftObject != null && shiftable) {
+					/*Initial objective checks */
+					if (shiftObject.name == "Shift Chair") {
+						if (chair_objective) {
+							call_gui = false;
+						}
+						else {
+							call_gui = true;
+							return;
+						}
+					}
 					var vect = getVect();
 					var duration = 1/Time.deltaTime;
 					var yieldTime = .0001;
@@ -233,18 +266,23 @@ function shift() {
 						}
 						yield WaitForSeconds(y);
 					}
+					if (obj_copy != null)
+						obj_copy.transform.position.z += shift;
+					if (obj_copy != null)
+						obj_copy2.transform.position.z += shift;
+				}
+				else if (!shiftable) {
+					bc_collider.center = new Vector3(object.collider.bounds.center.x,
+					object.collider.bounds.center.y,
+					(object.collider.bounds.center.z));
 				}
 				inMotion = false;
 				//shiftAxisUsed = true;
 				shiftObject = null;
-				
-				if (obj_copy != null)
-					obj_copy.transform.position.z += (!shiftable) ? 0 : shift;
-				if (obj_copy2 != null)
-					obj_copy2.transform.position.z += (!shiftable) ? 0 : shift;
-					
 				secondGrab = false;
 			}
+			//get the 'go' object outta here
+			bc_collider.center = new Vector3(10000, 10000, 10000);
 		}
 	}
 	/* 
@@ -276,15 +314,13 @@ function pushnpull() {
 			var dot = Quaternion.Dot(rotation, Quaternion(0.0, 1.0, 0.0, 0.0));
 			var face = (dot > 0.5) ? true : false;
 			var vect = (!face) ? -1 : 1;
-			
 			//cut speed in half while pushing or pulling 
 			movement.speed = speed / 2;
 			
 			/*granularity too large - SAM runs into box before box moves causing stuttering
 				Current fix - somewhat larger trigger zone for object 
 			*/
-			var delta = CharacterScript4Sam.xMotion*Time.deltaTime * vect;
-			
+			var delta = CharacterScript4Sam.xMotion*Time.deltaTime; //* vect;
 			/*shift position of object and copies by movement altered by -1 if necessary*/
 			
 			//Might want to parent the box to Sam instead but had trouble making it work
@@ -343,8 +379,8 @@ function interact() {
 		
 		if (object.name == "Fire Truck" && this.tag == "Player" && !inMotion) {
 			//Raise / lower ladder
-			var ladder1 = GameObject.Find("ladder1");
-			var ladder2 = GameObject.Find("ladder2");
+			var ladder1 = GameObject.Find("ladder");
+			//var ladder2 = GameObject.Find("ladder2");
 			var angle = (raised) ? -25 : 25; 
 			var vect = getVect();
 			var duration = 1/Time.deltaTime;
@@ -354,7 +390,7 @@ function interact() {
 				var y = (i/duration >= .9) ? newYield : yieldTime;
 				inMotion = true;
 				ladder1.transform.Rotate(vect*angle*Time.deltaTime);
-				ladder2.transform.Rotate(vect*angle*Time.deltaTime);
+				//ladder2.transform.Rotate(vect*angle*Time.deltaTime);
 				yield WaitForSeconds(y);
 			}
 			inMotion = false;
@@ -363,17 +399,19 @@ function interact() {
 		else if (object.name == "Floor 	Lamp" && this.tag == "Player") {
 			//display text saying Sam is too short
 		}
-		else if (object.name == "Shift Chair" && this.tag == "Player") {
+		else if (object.name == "Shift Chair" && this.tag == "Player" && !inMotion) {
 			//don't allow shift until rotated; i.e., interacted with
 			var shift_chair = GameObject.Find("Shift Chair");
 			vect = getVect();
 			for (i = 0; i < 1/Time.deltaTime; i++) {
 				y = (i/duration >= .9) ? newYield : yieldTime;
 				inMotion = true;
-				shift_chair.transform.Rotate(Vector3.down*90*Time.deltaTime);
+				shift_chair.transform.Rotate(Vector3.down*90.000*Time.deltaTime); // clamp basedon curr angle
 				yield WaitForSeconds(y);
 			}
 			inMotion = false;
+			chair_rotation_count = (chair_rotation_count + 1) % 4;
+			chair_objective = (chair_rotation_count == 1) ? true : false;
 		}
 		
 		/*... More? Possibly for interacting with other various objects like when Sam 
@@ -402,11 +440,21 @@ function valid() {
 	return returned;
 }
 
-/*
+
 function OnGUI() {
-	GUI.Label(Rect(10, 10, 100, 20), "Hello World");
+	if (object != null) {
+		//GUI.Box(Rect(140, Screen.height-50, Screen.width-300, 120), "HEY THERE");
+		//GUI.color = Color.yellow;
+		//GUI.Box(Rect(9, 30, 500, 20), "hey", style);
+	}
+	//GUI.Box(Rect(9, 30, 30, 20), "hey", style.customStyles[0]);
+	
+	//if (call_gui)
+		//GUI.Box(Rect(140, Screen.height-50, Screen.width-300, 120), "Hey Listen");
+		//GUI.Label(Rect(140, Screen.height-50, Screen.width-300, 120), "sample text");
+
 }
-*/
+
 
 /*Used to accurately shift objects pending their rotation */
 function getVect() {

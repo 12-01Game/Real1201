@@ -15,7 +15,9 @@
 var collisionMode				: int 		= 2; 	// 0 = PushPop, 1 = Shadow Blend, 2 = Quicksand
 var collisionThreshold 			: float 	= .5;
 
-var shadowTexture 				: Material;			// Stores the texture for the shadow
+var shadowTextureWall			: Material;			// Shadow material on the wall
+var shadowTextureFloor2Wall		: Material;			// Shadow material from the object to the wall on the floor
+var shadowTextureFront			: Material;			// Shadow material on the floor when the player is in line with the object
 var reverseTriWinding 			: boolean;			// This prevents the "backfacing" problem
 var nearestLight				: Transform;		// Nearest Light gameobject (if one exists) that casts static shadow
 
@@ -46,6 +48,7 @@ private var objFrontZ 			: float;
 private var heightScaleOffset 	: float;			// The height offset produced by scaling
 private var objToWallDistance 	: float;			// how far away the GameObject's back edge is from the wall
 private var isLifted			: boolean;			// whether or not the object is lifted above eye-level (no need for Hshadow)
+private var isInLane			: boolean;
 
 // Shadow properties
 private var shadowMeshV 		: Mesh;				// mesh for vertical shadow plane
@@ -111,6 +114,9 @@ function DefineDimensions(){
 
 	var wall : GameObject = GameObject.Find(WALL_NAME);
 	objToWallDistance = Mathf.Abs(wall.renderer.transform.position.z - objOriginZ - objDepth / 2) - SHADOW_OFFSET;
+
+	if(objToWallDistance > 5) isInLane = true;
+	else isInLane = false;
 }
 function getCombinedBounds(obj : GameObject){
 	var renderer : Renderer = obj.renderer;
@@ -212,7 +218,7 @@ function CreateVerticalShadow(){
 	// Add a collider to the shadow so that Hank can touch it
 	var meshColliderV : MeshCollider = shadowV.GetComponent("MeshCollider");
 	meshColliderV.sharedMesh = shadowMeshV;
-	shadowV.renderer.material = shadowTexture;
+	shadowV.renderer.material = shadowTextureWall;
 
 	var meshFilterVert : MeshFilter = shadowV.GetComponent("MeshFilter");
 	meshFilterVert.sharedMesh = shadowMeshV;
@@ -244,8 +250,11 @@ function CreateHorizontalShadow(){
 
 	var meshColliderH : MeshCollider = shadowH.GetComponent("MeshCollider");
 	meshColliderH.sharedMesh = shadowMeshH;
-	shadowH.renderer.material = shadowTexture;
 
+	if(isInLane)
+		shadowH.renderer.material = shadowTextureFront;
+	else
+		shadowH.renderer.material = shadowTextureFloor2Wall;
 
 	var meshFilterHor : MeshFilter = shadowH.GetComponent("MeshFilter");
 	meshFilterHor.sharedMesh = shadowMeshH;
@@ -310,6 +319,9 @@ function RepositionShadow() {
 
 	var wall : GameObject = GameObject.Find(WALL_NAME);
 	objToWallDistance = Mathf.Abs(wall.renderer.transform.position.z - objOriginZ - objDepth / 2) - SHADOW_OFFSET;
+	
+	if(objToWallDistance > 5) isInLane = true;
+	else isInLane = false;
 
 	if(shadowV == null)
 		CreateVerticalShadow();
@@ -335,7 +347,11 @@ function RepositionShadow() {
 
 	// Apply mesh
 	shadowV.GetComponent(MeshFilter).mesh = shadowMeshV;
-	shadowV.renderer.material = shadowTexture;
+
+	if(isInLane)
+		shadowV.renderer.material = shadowTextureFront;
+	else
+		shadowV.renderer.material = shadowTextureFloor2Wall;
 
 	if(!isLifted){
 		shadowMeshH.vertices = 
@@ -356,7 +372,7 @@ function RepositionShadow() {
 		shadowMeshH.uv = [Vector2 (0, 0), Vector2 (0, 1), Vector2(1, 1), Vector2 (1, 0)];	// Define UVs
 
 		shadowH.GetComponent(MeshFilter).mesh = shadowMeshH;
-		shadowH.renderer.material = shadowTexture;
+		shadowH.renderer.material = shadowTextureWall;
 	}
 }
 
@@ -387,7 +403,7 @@ function CastShadow(x: float, y: float, z: float){
 	CreateShadow();
 
 	if(isLifted) CastElevatedShadow(x,y,z);
-	else if(objToWallDistance > 5) CastFloorShadow(x,z);
+	else if(isInLane) CastFloorShadow(x,z);
 	else CastWallShadow(x,z);
 
 	AddShadowCollisionDetection();
