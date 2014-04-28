@@ -95,6 +95,11 @@ function Update () {
 		// Get desired X-motion
 		xMotion = Input.GetAxis(player + "Horizontal") * speed;
 		
+		// Neutralize motion
+		if (Mathf.Abs(xMotion) < 2) {
+			xMotion = 0;
+		}
+		
 		// No Y-motion
 		yMotion = 0;
 		
@@ -106,8 +111,16 @@ function Update () {
 			shouldFaceAngle = 0;
 		}
 		
+		// Override with strife
+		if (Input.GetAxis("LockLeft") > 0) {
+			shouldFaceAngle = 0;
+		}
+		else if (Input.GetAxis("LockRight") > 0) {
+			shouldFaceAngle = 180;
+		}
+		
 		// Play animation if there's xMotion
-		if (Mathf.Abs(xMotion) > 1) {
+		if (Mathf.Abs(xMotion) > 2) {
 			anim.Play(walkMotion);
 		}
 		else {
