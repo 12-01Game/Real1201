@@ -428,7 +428,7 @@ function OnGUI() {
 		//GUI.color = Color.yellow;
 		//GUI.Box(Rect(9, 30, 500, 20), "hey", style);
 	}
-	GUI.Box(Rect(9, 30, 30, 20), "hey", style.customStyles[0]);
+	//GUI.Box(Rect(9, 30, 30, 20), "hey", style.customStyles[0]);
 }
 
 

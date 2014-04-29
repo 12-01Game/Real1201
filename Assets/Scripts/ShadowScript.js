@@ -62,7 +62,7 @@ private var isCastByLight		: boolean = false;
 // Environment variables
 private var player 				: Transform;		// the player object to detect distance
 private var hank 				: GameObject;		// the player object to detect distance
-private var player2ObjDistance 				: float;			// player distance from gameobject
+private var player2ObjDistance 	: float;			// player distance from gameobject
 
 /*
  *	Start()
