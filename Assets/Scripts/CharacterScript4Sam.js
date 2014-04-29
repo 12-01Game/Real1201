@@ -64,7 +64,7 @@ function Update () {
 	/*Checks are done to make sure he doesn't rotate while pulling - 
 		if done right, can make it look really stupid if he pulls mid rotation
 		need to add a sort of 'snap' to where if this happens, he snaps to the proper rotation */
-	if (canRotate && !ObjectManipulation.secondGrab && this.gameObject.tag == "Player") {
+	if (canRotate && /*!ObjectManipulation.secondGrab*/ !Input.GetKeyDown("z")&& this.gameObject.tag == "Player") {
 		// Use slerp to provide smooth character rotation
 		var sfa = Quaternion.Euler(Vector3(0, shouldFaceAngle * -1, 0));
 		transform.rotation = Quaternion.Slerp(transform.rotation, sfa, rotationSpeed * Time.deltaTime);
@@ -79,9 +79,7 @@ function Update () {
 	var yMotion = 0;
 	
 	// Jumping...
-	if (controller.isGrounded && Input.GetButton("Jump") && canJump) {
-		print("isGrounded and jumping!");
-		
+	if (controller.isGrounded && Input.GetButton("Jump") && canJump) {		
 		// Reset gravity acceleration
 		fallFrames = 1;
 		yMotion = jumpForce;
@@ -97,6 +95,11 @@ function Update () {
 		// Get desired X-motion
 		xMotion = Input.GetAxis(player + "Horizontal") * speed;
 		
+		// Neutralize motion
+		if (Mathf.Abs(xMotion) < 2) {
+			xMotion = 0;
+		}
+		
 		// No Y-motion
 		yMotion = 0;
 		
@@ -108,8 +111,16 @@ function Update () {
 			shouldFaceAngle = 0;
 		}
 		
+		// Override with strife
+		if (Input.GetAxis("LockLeft") > 0) {
+			shouldFaceAngle = 0;
+		}
+		else if (Input.GetAxis("LockRight") > 0) {
+			shouldFaceAngle = 180;
+		}
+		
 		// Play animation if there's xMotion
-		if (Mathf.Abs(xMotion) > 1) {
+		if (Mathf.Abs(xMotion) > 2) {
 			anim.Play(walkMotion);
 		}
 		else {

@@ -12,7 +12,7 @@
 #pragma strict
 @script RequireComponent(CharacterController)
 
-var player : String = "";
+var player 						: String;			// Used to determine which input from the input manager to get
 
 var jumpForce					: float = 10.0f;	// The amount of force that the character jumps with
 var speed						: float = 6.0f;		// The speed at which this character moves
@@ -37,6 +37,11 @@ private var fallFrames			: int = 1;						// How long has this character been fal
 private var shouldFaceAngle		: float = 180;
 private var currFaceAngle		: float = 0;
 
+private var anim				: Animation;
+private var idleMotion			: String = "standard_idle_1";
+private var walkMotion			: String = "walking";
+
+
 /*
  *	Awake()
  *
@@ -55,9 +60,12 @@ function Awake() {
 function Update () {
 
 	// If the character can rotate, rotate smoothly (Sam)
-	if (canRotate && !ObjectManipulation.secondGrab && this.gameObject.tag == "Player") {
+	/*Checks are done to make sure he doesn't rotate while pulling - 
+		if done right, can make it look really stupid if he pulls mid rotation
+		need to add a sort of 'snap' to where if this happens, he snaps to the proper rotation */
+	if (canRotate && /*!ObjectManipulation.secondGrab*/ !Input.GetKeyDown("z")&& this.gameObject.tag == "Player") {
 		// Use slerp to provide smooth character rotation
-		var sfa = Quaternion.Euler(Vector3(0, shouldFaceAngle, 0));
+		var sfa = Quaternion.Euler(Vector3(0, shouldFaceAngle * -1, 0));
 		transform.rotation = Quaternion.Slerp(transform.rotation, sfa, rotationSpeed * Time.deltaTime);
 	}
 	
@@ -70,9 +78,7 @@ function Update () {
 	var yMotion = 0;
 	
 	// Jumping...
-	if (controller.isGrounded && Input.GetButton("Jump") && canJump) {
-		print("isGrounded and jumping!");
-		
+	if (controller.isGrounded && Input.GetButton("Jump") && canJump) {		
 		// Reset gravity acceleration
 		fallFrames = 1;
 		yMotion = jumpForce;
@@ -88,6 +94,11 @@ function Update () {
 		// Get desired X-motion
 		xMotion = Input.GetAxis(player + "Horizontal") * speed;
 		
+		// Neutralize motion
+		if (Mathf.Abs(xMotion) < 2) {
+			xMotion = 0;
+		}
+		
 		// No Y-motion
 		yMotion = 0;
 		
@@ -98,6 +109,15 @@ function Update () {
 		else if (xMotion < 0) {
 			shouldFaceAngle = 0;
 		}
+		
+		// Play animation if there's xMotion
+		/*if (Mathf.Abs(xMotion) > 2) {
+			anim.Play(walkMotion);
+		}
+		else {
+			anim.Stop();
+			anim.Play(idleMotion);
+		}*/
 	}
 	
 	// Falling...
@@ -113,8 +133,8 @@ function Update () {
 		yMotion = savedYMotion - (gravity * fallFrames);
 		fallFrames++;
 		
-		// Use the X-motion right before the character got airborne
-		xMotion = savedXMotion;
+		// Use the X-motion right before the character got airborne and allow SLIGHT control in the air
+		xMotion = savedXMotion + (Input.GetAxis(player + "Horizontal"));
 	}
 		
 	// Move	
