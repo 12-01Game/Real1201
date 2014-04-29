@@ -280,6 +280,7 @@ function shift() {
 				//shiftAxisUsed = true;
 				shiftObject = null;
 				secondGrab = false;
+			
 			}
 			//get the 'go' object outta here
 			bc_collider.center = new Vector3(10000, 10000, 10000);
