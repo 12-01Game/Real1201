@@ -29,6 +29,17 @@ private final var pushAxis = "Push";
 /*Axis for interaction with various objects */
 private final var interactAxis = "Activate";
 
+/*
+private final var pushWin = "Push_Windows";
+
+private final var pushMac = "Push_Mac";
+
+private final var shiftWin = "Shift_Windows";
+
+private final var shiftMac = "Shift_Mac";
+*/
+
+private var psychicPowers = false;
 
 //PUBLIC
 //------------------------------------------------------
@@ -52,7 +63,10 @@ public static final var NUMLEVELS = 2;
 /*Whether Sam is trying to grab */
 public static var grab : boolean;
 
-public var style : GUISkin;
+//public var style : GUISkin;
+
+/*Whether the push/pull button is being pressed */
+public static var pressed = false;
 
 
 //PRIVATE
@@ -161,9 +175,14 @@ function Start () {
 }
 
 function Update () {
+	if (Input.GetButtonDown("A"))
+		pressed = true;
+	else if (Input.GetButtonUp("A"))
+		pressed = false;
+
+
 	/* lane shift code */
-	//if (valid())
-		shift();
+	shift();
 
 	/* push pull code */		
 	pushnpull();
@@ -171,25 +190,6 @@ function Update () {
 	/* interact with objects code */
 	interact();
 }
-
-/* 		Sam's collision logic and moved entirely to other object triggers
-function OnTriggerEnter(collision : Collider) {
-	if(collision.gameObject.tag == "pushpull") {
-		object = collision.gameObject;
-		secondGrab = true;
-		//print("true");
-		//print(collision.gameObject.name);
-		//collision.gameObject.transform.parent = this.transform;
-		//this.transform.parent = collision.gameObject.transform;
-	}
-}
-
-function OnTriggerExit(other : Collider) {
-	if (other.gameObject.tag == "pushpull") {
-		object = null;
-	}
-}
-*/
 
 /*Determines the appropriate amount to shift a pushpull object by - 
 	It uses where the object is located in the scene based on 'lanes' */
@@ -214,9 +214,10 @@ CONTROLLER CODE CURRENTLY DOESN'T WORK - I'm working on it! Should be finished o
 */
 function shift() {
 	//controller or 's' key
-	if (/*(Input.GetAxisRaw(shiftAxis) != 0) || */Input.GetKeyDown("s") && !inMotion) {
-		//print("X");
-		if (object != null && !shiftAxisUsed) {
+	if (pressed && (Mathf.Abs(Input.GetAxis("Shift")) >= 0.5) && !inMotion) {
+		print("Shift");
+		//print(Input.GetAxis("Shift"));
+		if (object != null) {
 			var shift = determineShift();
 			var obj_copy = GameObject.Find(object+"_"+copy);
 			var obj_copy2 = GameObject.Find(object+"_"+copy+"2");
@@ -251,7 +252,7 @@ function shift() {
 						}
 						else {
 							call_gui = true;
-							return;
+							//return;
 						}
 					}
 					var vect = getVect();
@@ -277,20 +278,13 @@ function shift() {
 					(object.collider.bounds.center.z));
 				}
 				inMotion = false;
-				//shiftAxisUsed = true;
 				shiftObject = null;
 				secondGrab = false;
-			
 			}
 			//get the 'go' object outta here
 			bc_collider.center = new Vector3(10000, 10000, 10000);
 		}
 	}
-	/* 
-	else if (Input.GetAxisRaw(shiftAxis) == 0) {
-		shiftAxisUsed = false;
-	}
-	*/
 }
 
 /*Allows sam to push and pull a pushpull object if Sam entered the object's trigger zone and 
@@ -299,18 +293,18 @@ CONTROLLER CODE CURRENTLY DOESN'T WORK - I'm working on it! Should be finished o
 */
 function pushnpull() {
 	// "B" Button or 'z' key
-	if ( /*Input.GetAxis(pushAxis) || */Input.GetKeyDown("z")) {
-		//print("B");
+	if ((Input.GetKeyDown("z") || pressed)) {
+		print("Can Push");
 		grab = true;
 	}
-	if (/*(Input.GetAxisRaw(pushAxis) == 0) ||*/ Input.GetKeyUp("z")) {
+	if (Input.GetKeyUp("z") || !pressed) {
 		grab = false;
 		secondGrab = false;
 	}
-	if (object != null && secondGrab) {
+	if (object != null && secondGrab && Input.GetAxis("Push")) {
 		var obj_copy = GameObject.Find(object+"_"+copy);
 		var obj_copy2 = GameObject.Find(object+"_"+copy+"2");
-		if (grab) {
+		if (grab && !inMotion) {
 			var rotation : Quaternion = this.transform.rotation;
 			var dot = Quaternion.Dot(rotation, Quaternion(0.0, 1.0, 0.0, 0.0));
 			var face = (dot > 0.5) ? true : false;
