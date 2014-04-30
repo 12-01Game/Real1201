@@ -12,7 +12,7 @@
 #pragma strict
  
 // Variable Settings
-var collisionMode				: int 		= 2; 	// 0 = PushPop, 1 = Shadow Blend, 2 = Quicksand
+private var collisionMode		: int 		= 0; 	// 0 = PushPop, 1 = Shadow Blend, 2 = Quicksand
 var collisionThreshold 			: float 	= .5;
 
 var shadowTextureWall			: Material;			// Shadow material on the wall
@@ -76,7 +76,18 @@ function Start () {
 }
 
 function DefineDimensions(){
-	if(gameObject.name.Contains("Wallshelf")){
+	try{					// try to get dimensions from collider
+
+		objWidth = collider.bounds.size.x;
+		objHeight = collider.bounds.size.y;
+		objDepth = collider.bounds.size.z;
+
+		objOriginX = collider.transform.position.x;
+		objOriginY = collider.transform.position.y;
+		objOriginZ = collider.transform.position.z;
+
+	}catch(exception){		// else get the dimensions from the renderers
+
 		var combinedBounds : Bounds = getCombinedBounds(gameObject);
 
 		objWidth = combinedBounds.size.x;
@@ -86,15 +97,6 @@ function DefineDimensions(){
 		objOriginX = combinedBounds.center.x;
 		objOriginY = combinedBounds.center.y;
 		objOriginZ = combinedBounds.center.z;
-
-	}else{
-		objWidth = renderer.bounds.size.x;
-		objHeight = renderer.bounds.size.y;
-		objDepth = renderer.bounds.size.z;
-
-		objOriginX = renderer.transform.position.x;
-		objOriginY = renderer.transform.position.y;
-		objOriginZ = renderer.transform.position.z;
 	}
 
 	objRightX = objOriginX + (objWidth / 2);
@@ -119,13 +121,16 @@ function DefineDimensions(){
 	else isInLane = false;
 }
 function getCombinedBounds(obj : GameObject){
-	var renderer : Renderer = obj.renderer;
-	var combinedBounds = renderer.bounds;
+	var combinedBounds : Bounds;
 	var renderers = obj.GetComponentsInChildren(Renderer);
 	for (var render : Renderer in renderers) {
-	    if (render != renderer) {
-	    	combinedBounds.Encapsulate(render.bounds);
-	    }
+		if(obj.renderer == null || obj.renderer != render){	
+		    if (combinedBounds == null) {
+		    	combinedBounds = render.bounds;
+		    }else{
+		    	combinedBounds.Encapsulate(render.bounds);
+		    }
+		}
 	}
 	return combinedBounds;
 }
@@ -276,17 +281,21 @@ function VerifyShadow() {
 	var newY : float;
 	var newZ : float;
 
-	if(gameObject.name.Contains("Wallshelf")){
+	try{					// try to get dimensions from collider
+
+		newX = collider.transform.position.x;
+		newY = collider.transform.position.y;
+		newZ = collider.transform.position.z;
+
+	}catch(exception){		// else get the dimensions from the renderers
+
 		var combinedBounds : Bounds = getCombinedBounds(gameObject);
+
 		newX = combinedBounds.center.x;
 		newY = combinedBounds.center.y;
 		newZ = combinedBounds.center.z;
-
-	}else{
-		newX = renderer.transform.position.x;
-		newY = renderer.transform.position.y;
-		newZ = renderer.transform.position.z;
 	}
+
 	if (!newX.Equals(objOriginX) || !newY.Equals(objOriginY) || !newZ.Equals(objOriginZ)) {
 
 		// Respecify fields and invalidate
@@ -501,7 +510,7 @@ function CastWallShadow(x: float, z: float){
 		newLeft = objLeftX + objWidth / 2 - mNear * objToWallDistance;
 
 		set_shadow_v_vertices(newRight, newLeft, objFloorY, newBack);
-		set_shadow_h_vertices(newRight, newLeft, objRightX, objLeftX, objFloorY, newBack, newBack, objFrontZ, objBackZ);
+		set_shadow_h_vertices(newRight, newLeft, objRightX, objLeftX, objFloorY, newBack, newBack, objFrontZ, objFrontZ);
 
 	}else if (player2ObjDistance < objWidth / -2){	// on the left side of gameobject
 		distX = Mathf.Abs(x - objRightX);
@@ -518,7 +527,7 @@ function CastWallShadow(x: float, z: float){
 		newLeft = objLeftX + mFar * objToWallDistance;
 
 		set_shadow_v_vertices(newRight, newLeft, objFloorY, newBack);
-		set_shadow_h_vertices(newRight, newLeft, objRightX, objLeftX, objFloorY, newBack, newBack, objBackZ, objFrontZ);
+		set_shadow_h_vertices(newRight, newLeft, objRightX, objLeftX, objFloorY, newBack, newBack, objFrontZ, objFrontZ);
 
 	}else {								// within gameobject bounds
 		distX = Mathf.Abs(x - objRightX);
@@ -532,7 +541,7 @@ function CastWallShadow(x: float, z: float){
 		var mLeft = distX / distZ;
 		if(player2ObjDistance < 0){		// left half of the game object
 
-			newRight = Mathf.Max(objRightX, objRightX - objWidth  + mRight * objToWallDistance);
+			newRight = Mathf.Max(objRightX, objRightX - objWidth /2 + mRight * objToWallDistance);
 			newLeft = Mathf.Max(objLeftX, objLeftX - mLeft * objToWallDistance);
 
 			set_shadow_v_vertices(newRight, newLeft, objFloorY, newBack);
@@ -541,7 +550,7 @@ function CastWallShadow(x: float, z: float){
 		}else{							// right half of the game object
 
 			newRight = Mathf.Min(objRightX, objRightX + mRight * objToWallDistance);
-			newLeft = Mathf.Min(objLeftX, objLeftX + objWidth - mLeft * objToWallDistance);
+			newLeft = Mathf.Min(objLeftX, objLeftX + objWidth / 2 - mLeft * objToWallDistance);
 
 			set_shadow_v_vertices(newRight, newLeft, objFloorY, newBack);
 			set_shadow_h_vertices(newRight, newLeft, objRightX, objLeftX, objFloorY, newBack, newBack, objFrontZ, objFrontZ);
@@ -657,6 +666,7 @@ function PushPopCollision(){
 	try{
 		colliderV.enabled = true;
 		var hankBounds : Bounds = getCombinedBounds(hank);
+
 		if(hankBounds.Intersects(colliderV.bounds)){
 			var hankBottom : float = hank.transform.position.y - hankBounds.size.y / 2;
 			var hankCenter : float = hank.transform.position.x;
