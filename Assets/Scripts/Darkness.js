@@ -18,12 +18,7 @@ function OnTriggerEnter(other : Collider) {
 	if (other.gameObject.tag == "Player") {
 	
 		// TODO uncomment this when turnAndRun is implemented
-		// var turnAndRun = other.gameObject.GetComponent(TurnAndRun).turnAndRun; 
-		
-		var turnAndRun = function(distance : float) {
-			other.gameObject.GetComponent(CharacterController).Move(Vector3(-1 * distance, 0, 0));
-		}; // TODO delete this when turnAndRun is implemented
-		
+		var turnAndRun = other.gameObject.GetComponent(CharacterScript4Sam).turnAndRun; 
 		
 		turnAndRun(Mathf.Abs(other.transform.position.x - collider.bounds.min.x) + respawnDistance);
 	}

@@ -37,6 +37,9 @@ private var fallFrames			: int = 1;						// How long has this character been fal
 private var shouldFaceAngle		: float = 180;
 private var currFaceAngle		: float = 0;
 
+private var isScared			: boolean = false;				// Determines if Sam is controllable or if Sam is being controlled by the CPU
+private var runDistance 		: float = 0.0;
+
 private var anim				: Animation;
 private var idleMotion			: String = "standard_idle_1";
 private var walkMotion			: String = "walking";
@@ -60,6 +63,24 @@ function Awake() {
  *	Called as this character updates.
  */
 function Update () {
+
+	// First, check if Sam is being controlled by the CPU or the player
+	if (isScared) {
+	
+		// Turn him away from the danger
+		var sfaa = Quaternion.Euler(Vector3(0, 0 * -1, 0));
+		transform.rotation = Quaternion.Slerp(transform.rotation, sfaa, rotationSpeed * Time.deltaTime);
+		
+		// Make him run
+		controller.Move(Vector3(10 * Time.deltaTime * -1, 0, 0));
+		runDistance = runDistance - 10 * Time.deltaTime;
+		
+		// Has Sam run far enough?
+		if (runDistance <= 0) {
+			isScared = false;
+		}
+		return;
+	}
 
 	// If the character can rotate, rotate smoothly (Sam)
 	/*Checks are done to make sure he doesn't rotate while pulling - 
@@ -164,3 +185,16 @@ function Update () {
 	savedYMotion = yMotion;
 	
 }
+
+/*
+ *	turnAndRun()
+ *
+ *	For Patrick's script.
+ */
+ function turnAndRun(runDist : float) {
+ 	
+ 	// Turn Sam around and make him runb
+ 	isScared = true;
+ 	runDistance = runDist;
+ }
+ 
