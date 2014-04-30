@@ -1,7 +1,7 @@
 @script RequireComponent(BoxCollider)
 @script RequireComponent(SphereCollider)
 
-var respawnDistance : float = 3;
+var respawnDistance : float = 3; // distance outside the darkness that sam runs to
 
 function Start() {
 	var samColliders = GameObject.Find("Sam").GetComponentsInChildren(Collider);
@@ -16,6 +16,15 @@ function Start() {
 
 function OnTriggerEnter(other : Collider) {
 	if (other.gameObject.tag == "Player") {
-		other.gameObject.turnAndRun(Mathf.Abs(other.transform.position.x - gameObject.bounds.min.x) + respawnDistance);
+	
+		// TODO uncomment this when turnAndRun is implemented
+		// var turnAndRun = other.gameObject.GetComponent(TurnAndRun).turnAndRun; 
+		
+		var turnAndRun = function(distance : float) {
+			other.gameObject.GetComponent(CharacterController).Move(Vector3(-1 * distance, 0, 0));
+		}; // TODO delete this when turnAndRun is implemented
+		
+		
+		turnAndRun(Mathf.Abs(other.transform.position.x - collider.bounds.min.x) + respawnDistance);
 	}
 }
