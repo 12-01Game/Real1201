@@ -38,8 +38,9 @@ private var shouldFaceAngle		: float = 180;
 private var currFaceAngle		: float = 0;
 
 private var anim				: Animation;
-private var idleMotion			: String = "standard_idle_1";
-private var walkMotion			: String = "walking";
+//private var idleMotion			: String = "standard_idle_1";
+private var walkMotion			: String = "HankWalk";
+//private var walkBackwards		: String = "walking_backward_1";
 
 
 /*
@@ -50,6 +51,7 @@ private var walkMotion			: String = "walking";
 function Awake() {
 	faceVector = transform.TransformDirection(Vector3.left);
 	controller = GetComponent("CharacterController");
+	anim = GetComponent(Animation);
 }
 
 /*
@@ -63,7 +65,10 @@ function Update () {
 	/*Checks are done to make sure he doesn't rotate while pulling - 
 		if done right, can make it look really stupid if he pulls mid rotation
 		need to add a sort of 'snap' to where if this happens, he snaps to the proper rotation */
-	if (canRotate && /*!ObjectManipulation.secondGrab*/ !Input.GetKeyDown("z")&& this.gameObject.tag == "Player") {
+	var moving_object = false;
+	if (ObjectManipulation.pressed && ObjectManipulation.object != null)
+		moving_object = true;
+	if (canRotate && !moving_object && this.gameObject.tag == "Player") {
 		// Use slerp to provide smooth character rotation
 		var sfa = Quaternion.Euler(Vector3(0, shouldFaceAngle * -1, 0));
 		transform.rotation = Quaternion.Slerp(transform.rotation, sfa, rotationSpeed * Time.deltaTime);
@@ -111,13 +116,13 @@ function Update () {
 		}
 		
 		// Play animation if there's xMotion
-		/*if (Mathf.Abs(xMotion) > 2) {
+		if (Mathf.Abs(xMotion) > 2) {
 			anim.Play(walkMotion);
 		}
 		else {
-			anim.Stop();
-			anim.Play(idleMotion);
-		}*/
+			//anim.Stop();
+			//anim.Play(idleMotion);
+		}
 	}
 	
 	// Falling...
@@ -132,9 +137,9 @@ function Update () {
 		// Simulate acceleration by multiplying by the number of frames the character has been airborne for
 		yMotion = savedYMotion - (gravity * fallFrames);
 		fallFrames++;
-		
-		// Use the X-motion right before the character got airborne and allow SLIGHT control in the air
-		xMotion = savedXMotion + (Input.GetAxis(player + "Horizontal"));
+			
+		// Use the X-motion right before the character got airborne
+		xMotion = savedXMotion;
 	}
 		
 	// Move	

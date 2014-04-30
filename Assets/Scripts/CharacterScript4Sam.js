@@ -40,6 +40,7 @@ private var currFaceAngle		: float = 0;
 private var anim				: Animation;
 private var idleMotion			: String = "standard_idle_1";
 private var walkMotion			: String = "walking";
+private var walkBackwards		: String = "walking_backward_1";
 
 
 /*
@@ -124,7 +125,13 @@ function Update () {
 		
 		// Play animation if there's xMotion
 		if (Mathf.Abs(xMotion) > 2) {
-			anim.Play(walkMotion);
+			// Walk backwards?
+			if ((Input.GetAxis("LockLeft") > 0 && xMotion > 0) || (Input.GetAxis("LockRight") > 0 && xMotion < 0)) {
+					anim.Play(walkBackwards);
+			}
+			else {
+				anim.Play(walkMotion);
+			}
 		}
 		else {
 			anim.Stop();
