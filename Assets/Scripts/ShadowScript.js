@@ -14,6 +14,7 @@
 // Variable Settings
 private var collisionMode		: int 		= 0; 	// 0 = PushPop, 1 = Shadow Blend, 2 = Quicksand
 var collisionThreshold 			: float 	= .5;
+var alwaysCastByNearestLight	: boolean 	= false;
 
 var shadowTextureWall			: Material;			// Shadow material on the wall
 var shadowTextureFloor2Wall		: Material;			// Shadow material from the object to the wall on the floor
@@ -49,6 +50,7 @@ private var heightScaleOffset 	: float;			// The height offset produced by scali
 private var objToWallDistance 	: float;			// how far away the GameObject's back edge is from the wall
 private var isLifted			: boolean;			// whether or not the object is lifted above eye-level (no need for Hshadow)
 private var isInLane			: boolean;
+private var belowEyeLevel		: boolean;
 
 // Shadow properties
 private var shadowMeshV 		: Mesh;				// mesh for vertical shadow plane
@@ -87,7 +89,6 @@ function DefineDimensions(){
 		objOriginZ = collider.transform.position.z;
 
 	}catch(exception){		// else get the dimensions from the renderers
-
 		var combinedBounds : Bounds = getCombinedBounds(gameObject);
 
 		objWidth = combinedBounds.size.x;
@@ -117,14 +118,17 @@ function DefineDimensions(){
 	var wall : GameObject = GameObject.Find(WALL_NAME);
 	objToWallDistance = Mathf.Abs(wall.renderer.transform.position.z - objOriginZ - objDepth / 2) - SHADOW_OFFSET;
 
-	if(objToWallDistance > 5) isInLane = true;
+	if(Mathf.Abs(wall.renderer.transform.position.z - objOriginZ) > 5) isInLane = true;
 	else isInLane = false;
+
+	if(objFloorY < 3) belowEyeLevel = true;
+	else belowEyeLevel = false;
 }
 function getCombinedBounds(obj : GameObject){
-	var combinedBounds : Bounds;
+	var combinedBounds : Bounds = obj.renderer.bounds;
 	var renderers = obj.GetComponentsInChildren(Renderer);
 	for (var render : Renderer in renderers) {
-		if(obj.renderer == null || obj.renderer != render){	
+		if(obj.renderer != render){	
 		    if (combinedBounds == null) {
 		    	combinedBounds = render.bounds;
 		    }else{
@@ -393,10 +397,11 @@ function RepositionShadow() {
 function ShadowDetection() {
 	player2ObjDistance = player.position.x - objOriginX;
 	var facing : boolean = playerIsFacing();
-	if(nearestLight != null && (!facing || Mathf.Abs(player2ObjDistance) > Mathf.Abs(objOriginX - nearestLight.position.x))){
+	if(nearestLight != null && 
+		(alwaysCastByNearestLight || !facing || Mathf.Abs(player2ObjDistance) > Mathf.Abs(nearestLight.position.x - objOriginX))){
 		if(!isCastByLight){
 			isCastByLight = true;
-			player2ObjDistance = objOriginX - nearestLight.position.x;
+			player2ObjDistance = nearestLight.position.x - objOriginX;
 			CastShadow(nearestLight.position.x, nearestLight.position.y, nearestLight.position.z);
 		}
 	}else{
@@ -411,7 +416,7 @@ function ShadowDetection() {
 function CastShadow(x: float, y: float, z: float){
 	CreateShadow();
 
-	if(isLifted) CastElevatedShadow(x,y,z);
+	if(isLifted && !belowEyeLevel) CastElevatedShadow(x,y,z);
 	else if(isInLane) CastFloorShadow(x,z);
 	else CastWallShadow(x,z);
 
@@ -438,11 +443,12 @@ function set_shadow_v_vertices(newRight: float, newLeft: float, objFloorY: float
 function set_shadow_h_vertices(farRightX: float, farLeftX: float, nearRightX: float, nearLeftX: float, 
 	objFloorY: float, farRightZ: float, farLeftZ: float, nearLeftZ: float, nearRightZ: float){
 
-	shadowMeshH.vertices = 
-		[Vector3(farRightX, objFloorY, farRightZ),
-		   Vector3(farLeftX, objFloorY, farLeftZ),
-		   Vector3(nearLeftX, objFloorY, nearLeftZ),
-		   Vector3(nearRightX, objFloorY, nearRightZ)];
+	if(shadowMeshH != null)
+		shadowMeshH.vertices = 
+			[Vector3(farRightX, objFloorY, farRightZ),
+			   Vector3(farLeftX, objFloorY, farLeftZ),
+			   Vector3(nearLeftX, objFloorY, nearLeftZ),
+			   Vector3(nearRightX, objFloorY, nearRightZ)];
 
 }
 function CastFloorShadow(x: float, z: float){
