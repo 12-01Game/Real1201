@@ -25,6 +25,8 @@ var gravity						: float = .0981;		// Control how much gravity this character is
 
 static var xMotion				: float = 0.0;		// LOL ROGER
 
+private var bingo				: Transform;		// The "invisble dog" that allows the camera to track slightly ahead of the player
+
 private var controller			: CharacterController;			// The CharacterController component that must be attached to this character
 
 private var faceVector			: Vector3 = Vector3.zero;		// The vector the character moves on
@@ -54,6 +56,7 @@ private var walkBackwards		: String = "walking_backward_1";
 function Awake() {
 	faceVector = transform.TransformDirection(Vector3.left);
 	controller = GetComponent("CharacterController");
+	bingo =  transform.Find("Bingo");
 	anim = GetComponentsInChildren(Animation)[0];
 }
 
@@ -136,6 +139,22 @@ function Update () {
 		}
 		else if (xMotion < 0) {
 			shouldFaceAngle = 0;
+		}
+		
+		// Figure out what bingo should do
+		var shouldBeFacing = Quaternion.Euler(Vector3(0, shouldFaceAngle, 0));
+		var isReallyFacing = transform.rotation;
+		
+		print(shouldBeFacing + "==" + isReallyFacing);
+		
+		if (shouldBeFacing == isReallyFacing) {
+			// Ok to lerp
+			if (xMotion > 0) {
+				bingo.transform.position.x = transform.position.x + 6;
+			}
+			else if (xMotion < 0) {
+				bingo.transform.position.x = transform.position.x - 6;
+			}
 		}
 		
 		// Override with strife

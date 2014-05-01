@@ -1,13 +1,25 @@
-﻿static final var SAM_NAME : String = "Sam";
+﻿static final var BINGO_NAME : String = "Bingo";
 
 private var subject : Transform;
 var texture : Texture;
 
+private var subjectX : float;
+private var cameraX : float;
+
+private static final var distance : float = 30.0;
+private static final var height	 : float = 5.6;
+
 function Start () {
-	subject = GameObject.Find(SAM_NAME).transform;
+	subject = GameObject.Find(BINGO_NAME).transform;
 }
+
 function LateUpdate () {
-	transform.position.x = subject.position.x;
+
+	subjectX = subject.position.x;
+	cameraX = transform.position.x;
+	
+	transform.position = Vector3.Lerp (Vector3(cameraX, height, -1 * distance), Vector3(subjectX, height, -1 * distance), Time.deltaTime * 4);
+	// transform.position.x = subject.position.x;
 }
 
 function OnGUI() {
