@@ -231,7 +231,10 @@ function shift() {
 			var tempColl = go.collider;
 			if (shiftable) {
 				for (var obj : GameObject in all_objects) {
-					if (!obj.collider && !obj.GetComponentInChildren(Collider)) { // if no collider for the object, skip}
+					if ((!obj.collider && !obj.GetComponentInChildren(Collider)) || 
+						obj.tag == "Shadow_Wall" ||
+						obj.name == "Scene" ||
+						obj.tag == "Puzzle" ) { // if no collider for the object, skip}
 						continue;
 					}
 
