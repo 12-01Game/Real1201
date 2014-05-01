@@ -159,7 +159,7 @@ function Start () {
 			thing.collider.bounds.center.y,
 			thing.collider.bounds.center.z);
 		var width2 = thing.collider.bounds.size.z / 2;
-		bc2.size = new Vector3(thing.collider.bounds.size.x+1, // just smaller than the width
+		bc2.size = new Vector3(thing.collider.bounds.size.x+1.5, // just smaller than the width
 					thing.collider.bounds.size.y,
 					thing.collider.bounds.size.z + width + SHIFTAMT);
 		bc2.isTrigger = true;
