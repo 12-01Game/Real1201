@@ -8,7 +8,7 @@ function Start () {
 function Update () {
 }
 
-function OnTriggerEnter(collision : Collider) {
+function OnTriggerStay(collision : Collider) {
 	if (collision.gameObject.tag != "Player2" && collision.gameObject.tag != "Shadow") {
 		TEST.shiftable = true;
 		TEST.object = GameObject.Find(this.gameObject.name.Substring(0, this.gameObject.name.Length-31));

@@ -6,16 +6,15 @@
 private final var SHIFTAMT = 3.5;
 
 /*Left side of initial lane (back wall) */
-private final var lane_zero = 5;
+private static final var lane_zero = 5;
 
 /*Width of the entire floor */
-private final var floor_width = 10;
+private static final var floor_width = 10;
 
 /*Left side of middle lane */
-private final var laneMid = lane_zero - floor_width / 3;
+private static final var laneMid = lane_zero - floor_width / 3;
 
-/*Left side of lane closest to camera */
-private final var laneFront = laneMid - floor_width / 3;
+
 
 /*Tag for gameobjects that are copies */
 private final var copy = "Copy";
@@ -67,6 +66,9 @@ public static var grab : boolean;
 
 /*Whether the push/pull button is being pressed */
 public static var pressed = false;
+
+/*Left side of lane closest to camera */
+public static final var laneFront = laneMid - floor_width / 3;
 
 
 //PRIVATE

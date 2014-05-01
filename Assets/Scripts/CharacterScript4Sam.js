@@ -82,12 +82,14 @@ function Update () {
 		return;
 	}
 
+
 	// If the character can rotate, rotate smoothly (Sam)
 	/*Checks are done to make sure he doesn't rotate while pulling - 
 		if done right, can make it look really stupid if he pulls mid rotation
 		need to add a sort of 'snap' to where if this happens, he snaps to the proper rotation */
 	var moving_object = false;
-	if (ObjectManipulation.pressed && ObjectManipulation.object != null)
+	var om : ObjectManipulation;
+	if (om.pressed && om.object != null && om.object.transform.position.z < om.laneFront)
 		moving_object = true;
 	if (canRotate && !moving_object && this.gameObject.tag == "Player") {
 		// Use slerp to provide smooth character rotation
