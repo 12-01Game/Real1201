@@ -304,7 +304,8 @@ function pushnpull() {
 		grab = false;
 		secondGrab = false;
 	}
-	if (object != null && secondGrab && Input.GetAxis("Push")) {
+	if (object != null && secondGrab && Input.GetAxis("Push") && 
+			object.transform.position.z < laneFront) {
 		var obj_copy = GameObject.Find(object+"_"+copy);
 		var obj_copy2 = GameObject.Find(object+"_"+copy+"2");
 		if (grab && !inMotion) {
