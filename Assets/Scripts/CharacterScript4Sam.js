@@ -81,6 +81,7 @@ function Update () {
 		// Has Sam run far enough?
 		if (runDistance <= 0) {
 			isScared = false;
+			shouldFaceAngle = 0;
 		}
 		return;
 	}
