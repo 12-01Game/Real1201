@@ -18,7 +18,6 @@ function Update() {
 	distance = Mathf.Abs(this.transform.position.x - player.position.x);
 	print(Input.GetButtonDown(which_button));
 	if (distance < 1){
-		Debug.Log(renderer.material.shader);
 		renderer.material.shader = HIGHLIGHTED_SHADER;
 		if (Input.GetButtonDown(which_button)) {
 			for (var i = 0; i < light_sources.length; i++) {
