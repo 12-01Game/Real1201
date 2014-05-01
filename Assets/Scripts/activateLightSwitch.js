@@ -16,7 +16,6 @@ function Start() {
 function Update() {
 	which_button = "HankAction";
 	distance = Mathf.Abs(this.transform.position.x - player.position.x);
-	print(Input.GetButtonDown(which_button));
 	if (distance < 1){
 		renderer.material.shader = HIGHLIGHTED_SHADER;
 		if (Input.GetButtonDown(which_button)) {
