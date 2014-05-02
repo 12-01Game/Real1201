@@ -151,10 +151,10 @@ function Update () {
 		if (shouldBeFacing == isReallyFacing) {
 			// Ok to lerp
 			if (xMotion > 0) {
-				bingo.transform.position.x = transform.position.x + 6;
+				bingo.transform.position.x = transform.position.x + 7;
 			}
 			else if (xMotion < 0) {
-				bingo.transform.position.x = transform.position.x - 6;
+				bingo.transform.position.x = transform.position.x - 7;
 			}
 		}
 		
