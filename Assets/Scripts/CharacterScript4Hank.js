@@ -40,6 +40,8 @@ private var walkMotion			: String = "HankWalk";
 
 private var heightAboveFloor : float;
 
+private var shouldLockTo : float;		// Kind of a hacky fix but it works. Keeps Hank locked to his axis so he won't go crazy and fall off the level
+
 /*
  *	Awake()
  *
@@ -52,6 +54,8 @@ function Awake() {
 	
 	var floorY = GameObject.Find("Floor Level").collider.bounds.max.y;
 	heightAboveFloor = controller.transform.position.y - floorY;
+	
+	shouldLockTo = transform.position.z;
 }
 
 /*
@@ -60,6 +64,9 @@ function Awake() {
  *	Called as this character updates.
  */
 function Update () {
+
+	// Lock the Z axis
+	transform.position.z = shouldLockTo;
 
 	// If the character can rotate, rotate smoothly (Sam)
 	/*Checks are done to make sure he doesn't rotate while pulling - 

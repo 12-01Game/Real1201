@@ -31,7 +31,7 @@ private final var WALL_NAME 		: String 	= "BackWall";	// Name identifier for the
 private final var SAM_NAME 			: String 	= "Sam";	// Name indentifier for the player to calculate distance from obj
 private final var HANK_NAME			: String 	= "Hank";
 private final var SHADOW_OFFSET		: float		= 0.1;			// distance shadow is offset from plane
-private final var triggerDistance 	: float 	= 14.0;			// distance at which Shadow Skewing is triggered
+private final var triggerDistance 	: float 	= 15.0;			// distance at which Shadow Skewing is triggered
 
 // Object properties
 private var objWidth 			: float;
