@@ -692,11 +692,12 @@ function PushPopCollision(){
 			var colliderCenter : float = colliderV.center.y;
 			if(hankBottom < colliderCenter - collisionThreshold){
 				if(hankCenter > colliderLeft){
-					if(hankCenter <= colliderCenter)
-						PushHankToLeft();
-					else
+					if(hankCenter < colliderRight)
+						PushHankToTop();
+					else if(hankLeft < colliderRight)
 						PushHankToRight();
-				}
+				}else if(hankRight > colliderLeft)
+					PushHankToLeft();
 			}
 		}
 	}catch(exception){}
