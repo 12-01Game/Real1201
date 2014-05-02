@@ -154,12 +154,19 @@ function Update () {
 }
 
 function isGrounded() {
-	var surface : RaycastHit;
-	var grounded = Physics.Raycast(controller.transform.position, Vector3(0, -1, 0), surface, heightAboveFloor + 0.01);
-	if (grounded && surface.collider.gameObject.name != "Floor Level") {
-		Debug.Log(surface.collider);
-		grounded = (surface.collider.gameObject.tag == "Copy") ? false : grounded;
+	var surfaces : RaycastHit[] = Physics.RaycastAll(controller.transform.position, Vector3(0, -1, 0), heightAboveFloor + 0.01);
+	
+	if (surfaces.length == 0) {
+		return false;
+	} else {
+		var grounded = false;
+		for (var i = 0; i < surfaces.length; i++) {
+			if (surfaces[i].distance >= heightAboveFloor - 0.01 && surfaces[i].collider.gameObject.tag != "Copy") {
+				grounded = true;
+				break;
+			}
+		}
+		return grounded;
 	}
-	return grounded;
 }
 
