@@ -12,25 +12,23 @@
 #pragma strict
  
 // Variable Settings
-private var collisionMode		: int 		= 0; 	// 0 = PushPop, 1 = Shadow Blend, 2 = Quicksand
-var collisionThreshold 			: float 	= .5;
-var alwaysCastByNearestLight	: boolean 	= false;
 
 var shadowTextureWall			: Material;			// Shadow material on the wall
 var shadowTextureFloor2Wall		: Material;			// Shadow material from the object to the wall on the floor
 var shadowTextureFront			: Material;			// Shadow material on the floor when the player is in line with the object
 var reverseTriWinding 			: boolean;			// This prevents the "backfacing" problem
 var nearestLight				: Transform;		// Nearest Light gameobject (if one exists) that casts static shadow
+var alwaysCastByNearestLight	: boolean 	= false;
 
-var scalingWidthVar 			: float 	= 1.0;			// shadow width scale in respect to gameobject
-var scalingHeightVar 			: float 	= 1.0;			// shadow height scale in respect to gameobject
-var shadowDepth					: float 	= 1.0;
+private var scalingWidthVar 	: float 	= 1.15;			// shadow width scale in respect to gameobject
+private var scalingHeightVar 	: float 	= 1.15;			// shadow height scale in respect to gameobject
+private var shadowColliderDepth	: float 	= 1.0;			// depth of shadow collider
 
 // Environment settings
 private final var WALL_NAME 		: String 	= "BackWall";	// Name identifier for the back wall to calculate objDistanceToWall
-private final var SAM_NAME 			: String 	= "Sam";	// Name indentifier for the player to calculate distance from obj
-private final var HANK_NAME			: String 	= "Hank";
-private final var SHADOW_OFFSET		: float		= 0.1;			// distance shadow is offset from plane
+private final var SAM_NAME 			: String 	= "Sam";		// Name identifier for player1
+private final var HANK_NAME			: String 	= "Hank";		// Name identifier for player2
+private final var SHADOW_OFFSET		: float		= 0.25;			// distance shadow is offset from plane
 private final var triggerDistance 	: float 	= 15.0;			// distance at which Shadow Skewing is triggered
 
 // Object properties
@@ -48,18 +46,23 @@ private var objFrontZ 			: float;
 
 private var heightScaleOffset 	: float;			// The height offset produced by scaling
 private var objToWallDistance 	: float;			// how far away the GameObject's back edge is from the wall
-private var isLifted			: boolean;			// whether or not the object is lifted above eye-level (no need for Hshadow)
-private var isInLane			: boolean;
-private var belowEyeLevel		: boolean;
+private var belowEyeLevel		: boolean;			// if the object is in the field of vision below eye-level
+private var againstWall			: boolean;			// if the object is against the wall (no need for Hshadow)
+private var isInLane			: boolean;			// if the object is in the walking lane of player1
 
 // Shadow properties
 private var shadowMeshV 		: Mesh;				// mesh for vertical shadow plane
 private var shadowMeshH 		: Mesh;				// mesh for horizontal shadow plane
 private var shadowV 			: GameObject;		// gameobject for vertical shadow plane
 private var shadowH 			: GameObject;		// gameobject for horizontal shadow plane
-private var colliderV 			: BoxCollider;
-private var isVisible 			: boolean = false;	// whether or not the shadow is currently visible
-private var isCastByLight		: boolean = false;
+private var colliderV 			: BoxCollider;		// collider for vertical shadow plane
+private var isVisible 			: boolean;			// whether or not the shadow is currently visible
+private var isCastByLight		: boolean;			// whether or not the shadow is cast by the nearest light
+
+private var collisionMode					: int 		= 1; 		// 0 = PushPop, 1 = Shadow Blend, 2 = Quicksand
+private var collisionThreshold 				: float 	= 0.33;		// Threshold for shadow collision detection
+private var maxShadowAlpha					: float		= .5;		// Maximum alpha (opacity) value for shadows
+private var shadowColliderAlphaThreshold	: float 	= .1;		// Alpha threshold before shadow collider is generated
 
 // Environment variables
 private var player 				: Transform;		// the player object to detect distance
@@ -109,14 +112,13 @@ function DefineDimensions(){
 	// Do some scaling
 	heightScaleOffset = ((objHeight * scalingHeightVar) - objHeight) / 2;
 	objWidth = objWidth * scalingWidthVar;
-	objHeight = objHeight * scalingWidthVar;	
-
-	// Determine if the object is lifted for proper shadow rendering
-	if(objOriginY >= player.renderer.bounds.size.y) isLifted = true;
-	else isLifted = false;
+	objHeight = objHeight * scalingHeightVar;	
 
 	var wall : GameObject = GameObject.Find(WALL_NAME);
 	objToWallDistance = Mathf.Abs(wall.renderer.transform.position.z - objOriginZ - objDepth / 2) - SHADOW_OFFSET;
+
+	if(objToWallDistance < .5) againstWall = true;
+	else againstWall = false;
 
 	if(Mathf.Abs(wall.renderer.transform.position.z - objOriginZ) > 5) isInLane = true;
 	else isInLane = false;
@@ -192,7 +194,7 @@ function ActivateShadow() {
 	CreateVerticalShadow();
 
 	// create floor shadow if object is below eye level
-	if(!isLifted){	
+	if(!againstWall){	
 		CreateHorizontalShadow();
 	}	
 }
@@ -203,7 +205,7 @@ function CreateVerticalShadow(){
 	shadowV.tag = "Shadow";
 
 	colliderV = shadowV.AddComponent("BoxCollider");
-	colliderV.size = Vector3(objWidth, objHeight, shadowDepth);
+	colliderV.size = Vector3(objWidth, objHeight, shadowColliderDepth);
 	colliderV.center = Vector3(objRightX - objWidth/2, objFloorY + objHeight/2, objBackZ + objToWallDistance);
 
 	shadowMeshV = new Mesh();	// Make a new shadow mesh
@@ -366,7 +368,7 @@ function RepositionShadow() {
 	else
 		shadowV.renderer.material = shadowTextureFloor2Wall;
 
-	if(!isLifted){
+	if(!againstWall){
 		shadowMeshH.vertices = 
 			[Vector3(objRightX, objFloorY, objBackZ + objToWallDistance),
 			   Vector3(objRightX - objWidth, objFloorY, objBackZ + objToWallDistance),
@@ -416,22 +418,34 @@ function ShadowDetection() {
 function CastShadow(x: float, y: float, z: float){
 	CreateShadow();
 
-	if(isLifted && !belowEyeLevel) CastElevatedShadow(x,y,z);
+	if(againstWall && !belowEyeLevel) CastElevatedShadow(x,y,z);
 	else if(isInLane) CastFloorShadow(x,z);
 	else CastWallShadow(x,z);
 
-	AddShadowCollisionDetection();
 	ShadowFade();
 }
 
 function ShadowFade(){
 	var d : float = Mathf.Abs(player2ObjDistance);
 	try{
-		shadowV.renderer.material.color.a = 1 - d / triggerDistance;
+		shadowV.renderer.material.color.a = (1 - d / triggerDistance) * maxShadowAlpha;
 	}catch(exception){}
 	try{
-		shadowH.renderer.material.color.a = 1 - d / triggerDistance;
+		shadowH.renderer.material.color.a = (1 - d / triggerDistance) * maxShadowAlpha;
 	}catch(exception){}
+	Debug.Log(shadowV.renderer.material.color.a);
+}
+function ShadowColliderManager(left:float,right:float,back:float){
+	var w =  right - left;
+	colliderV.center = Vector3(right - w/2, objOriginY, back);
+
+	if(shadowV.renderer.material.color.a >= shadowColliderAlphaThreshold){
+		colliderV.size = Vector3(w, objHeight, shadowColliderDepth);
+		ShadowCollisionDetection();
+	}else{
+		colliderV.size = Vector3(0, 0, 0);
+		colliderV.enabled = false;
+	}
 }
 function set_shadow_v_vertices(newRight: float, newLeft: float, objFloorY: float, newBack: float){
 	shadowMeshV.vertices = 
@@ -564,9 +578,7 @@ function CastWallShadow(x: float, z: float){
 		}
 	}
 
-	var w =  newRight - newLeft;
-	colliderV.size = Vector3(w, objHeight, shadowDepth);
-	colliderV.center = Vector3(newRight - w/2, objOriginY, newBack);
+	ShadowColliderManager(newLeft,newRight,newBack);
 
 }
 function CastElevatedShadow(x: float, y: float, z: float){
@@ -644,11 +656,9 @@ function CastElevatedShadow(x: float, y: float, z: float){
 	// 	   Vector3(newLeft, objOriginY + mYZ * objDepth/2 , newBack),
 	// 	   Vector3(newRight, objOriginY + mYZ * objDepth/2  , newBack)];
 
-	var w =  newRight - newLeft;
-	colliderV.size = Vector3(w, objHeight, shadowDepth);
-	colliderV.center = Vector3(newRight - w/2, objOriginY, newBack);
+	ShadowColliderManager(newLeft,newRight,newBack);
 }
-function AddShadowCollisionDetection(){
+function ShadowCollisionDetection(){
 	switch(collisionMode){
 	case 0:	// PushPop
 		PushPopCollision();
@@ -695,8 +705,9 @@ function ShadowBlendCollision(){
 	try{
 		var hankBounds : Bounds = getCombinedBounds(hank);
 		var hankBottom : float = hank.transform.position.y - hankBounds.size.y / 2;
-		var colliderCenter : float = colliderV.center.y;
-		if(hankBottom < colliderCenter - collisionThreshold){
+		var colliderCenter 	: float = colliderV.center.y;
+		var colliderTop		: float = colliderCenter + colliderV.size.y / 2;
+		if(hankBottom < colliderTop - collisionThreshold){
 			colliderV.enabled = false;
 		}else{
 			colliderV.enabled = true;
