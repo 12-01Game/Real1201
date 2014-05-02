@@ -21,7 +21,7 @@ function OnTriggerStay(collision : Collider) {
 		if (!halo)
 			TEST.object.AddComponent("Halo");
 		*/
-		TEST.object.renderer.material.shader = shade
+		TEST.object.renderer.material.shader = shade;
 	}
 }
 
