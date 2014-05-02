@@ -1,4 +1,4 @@
-﻿/*
+/*
  *	CharacterScript.js
  *
  *	A script that causes characters in 12:01 to interact with the game world.
@@ -19,17 +19,13 @@ var speed						: float = 6.0f;		// The speed at which this character moves
 var rotationSpeed				: float = 10.0f;	// The speed at which this character rotates
 
 var canRotate					: boolean = true;	// Set this to true if you want the character to rotate
-var canJump						: boolean = true;	// Set this to true if you want the character to jump
 
 var gravity						: float = .0981;		// Control how much gravity this character is exposed to
-
-static var xMotion				: float = 0.0;		// LOL ROGER
 
 private var controller			: CharacterController;			// The CharacterController component that must be attached to this character
 
 private var faceVector			: Vector3 = Vector3.zero;		// The vector the character moves on
 private var downVector			: Vector3 = Vector3.down;		// The vector the character falls on
-private var savedXMotion		: float = 0;					// When the character is airborne, use this value to launch the character in this direction
 private var savedYMotion		: float = 0;					// When the character is airborne, use this value to figure out how much the player should 
 																// fall by
 private var fallFrames			: int = 1;						// How long has this character been falling?
@@ -42,6 +38,7 @@ private var anim				: Animation;
 private var walkMotion			: String = "HankWalk";
 //private var walkBackwards		: String = "walking_backward_1";
 
+private var heightAboveFloor : float;
 
 /*
  *	Awake()
@@ -52,6 +49,9 @@ function Awake() {
 	faceVector = transform.TransformDirection(Vector3.left);
 	controller = GetComponent("CharacterController");
 	anim = GetComponent(Animation);
+	
+	var floorY = GameObject.Find("Floor Level").collider.bounds.max.y;
+	heightAboveFloor = controller.transform.position.y - floorY;
 }
 
 /*
@@ -79,25 +79,33 @@ function Update () {
 		transform.rotation.y = shouldFaceAngle;
 	}
 	
-	xMotion = 0;
+	// Get desired X-motion
+	var xMotion = Input.GetAxis(player + "Horizontal") * speed;
+	
 	var yMotion = 0;
 	
+	var grounded = isGrounded();
+	
+	if (Input.GetButtonDown("Jump")) {
+		if (grounded) {
+			Debug.Log("Jump!");
+		} else {
+			Debug.Log("Can't jump! Y-Position = " + controller.transform.position.y);
+		}
+	}
+	
 	// Jumping...
-	if (controller.isGrounded && Input.GetButton("Jump") && canJump) {		
+	if (grounded && Input.GetButtonDown("Jump")) {		
 		// Reset gravity acceleration
 		fallFrames = 1;
 		yMotion = jumpForce;
-		xMotion = savedXMotion;
 	}
 
 	// Grounded...
-	else if (controller.isGrounded) {
+	else if (grounded) {
 	
 		// Reset gravity acceleration
 		fallFrames = 1;
-		
-		// Get desired X-motion
-		xMotion = Input.GetAxis(player + "Horizontal") * speed;
 		
 		// Neutralize motion
 		if (Mathf.Abs(xMotion) < 2) {
@@ -137,16 +145,16 @@ function Update () {
 		// Simulate acceleration by multiplying by the number of frames the character has been airborne for
 		yMotion = savedYMotion - (gravity * fallFrames);
 		fallFrames++;
-			
-		// Use the X-motion right before the character got airborne
-		xMotion = savedXMotion;
 	}
 		
 	// Move	
 	controller.Move(Vector3(xMotion * Time.deltaTime, yMotion * Time.deltaTime, 0));
 	
 	// Save the motions
-	savedXMotion = xMotion;
 	savedYMotion = yMotion;
 	
+}
+
+function isGrounded() {
+	return Physics.Raycast(controller.transform.position, Vector3(0, -1, 0), heightAboveFloor + 0.01);
 }
