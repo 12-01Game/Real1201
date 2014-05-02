@@ -14,6 +14,9 @@ private static final var hint5 =
 private static var displayHint : String;
 
 private static var hints : Array;
+
+private var callGUI = true;
+
 function Start () {
 	hints = new Array();
 	hints.push(hint1);
@@ -25,12 +28,13 @@ function Start () {
 }
 
 function Update () {
-	
+
 }
 
-function OnTriggerEnter(collider : Collider) {
+function OnTriggerStay(collider : Collider) {
 
 	if (collider.gameObject.tag == "Tooltip") {
+		callGUI = true;
 		var name = collider.gameObject.name.Substring(4);
 		var index = int.Parse(name);
 		
@@ -38,6 +42,12 @@ function OnTriggerEnter(collider : Collider) {
 	}
 }
 
+function OnTriggerExit(collider : Collider) {
+	yield WaitForSeconds(1);
+	callGUI = false;
+}
+
 function OnGUI() {
-	GUI.Label(Rect(140, Screen.height-50, Screen.width-300, 120), displayHint);
+	if (callGUI)
+		GUI.Label(Rect(140, Screen.height-50, Screen.width-300, 120), displayHint);
 }
