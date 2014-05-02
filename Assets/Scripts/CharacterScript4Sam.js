@@ -146,7 +146,7 @@ function Update () {
 		var shouldBeFacing = Quaternion.Euler(Vector3(0, shouldFaceAngle, 0));
 		var isReallyFacing = transform.rotation;
 		
-		print(shouldBeFacing + "==" + isReallyFacing);
+		//print(shouldBeFacing + "==" + isReallyFacing);
 		
 		if (shouldBeFacing == isReallyFacing) {
 			// Ok to lerp

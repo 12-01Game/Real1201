@@ -92,7 +92,6 @@ function Update () {
 	var yMotion = 0;
 	
 	var grounded = isGrounded();
-	
 	// Jumping...
 	if (grounded && Input.GetButtonDown("Jump")) {		
 		// Reset gravity acceleration
@@ -157,10 +156,10 @@ function Update () {
 function isGrounded() {
 	var surface : RaycastHit;
 	var grounded = Physics.Raycast(controller.transform.position, Vector3(0, -1, 0), surface, heightAboveFloor + 0.01);
-	
-	if (grounded) {
+	if (grounded && surface.collider.gameObject.name != "Floor Level") {
 		Debug.Log(surface.collider);
+		grounded = (surface.collider.gameObject.tag == "Copy") ? false : grounded;
 	}
-	
 	return grounded;
 }
+
