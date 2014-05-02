@@ -1,8 +1,10 @@
 ﻿#pragma strict
 
 private var TEST : ObjectManipulation;
+private var shade : Shader;
 
 function Start () {
+	shade = Shader.Find("Self-Illumin/Outlined Diffuse");
 }
 
 function Update () {
@@ -19,7 +21,7 @@ function OnTriggerStay(collision : Collider) {
 		if (!halo)
 			TEST.object.AddComponent("Halo");
 		*/
-		TEST.object.renderer.material.shader = Shader.Find("Self-Illumin/Outlined Diffuse");
+		TEST.object.renderer.material.shader = shade
 	}
 }
 

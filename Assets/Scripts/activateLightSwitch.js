@@ -2,7 +2,8 @@
 
 var light_sources = new GameObject[0];
 var player : Transform;
-var distance : float;
+var distanceX : float;
+var distanceY : float;
 var which_button : String;
 private static var DEFAULT_SHADER = Shader.Find("Diffuse");
 private static var HIGHLIGHTED_SHADER = Shader.Find("Self-Illumin/Outlined Diffuse");
@@ -15,8 +16,9 @@ function Start() {
 
 function Update() {
 	which_button = "HankAction";
-	distance = Mathf.Abs(this.transform.position.x - player.position.x);
-	if (distance < 1){
+	distanceX = Mathf.Abs(this.transform.position.x - player.position.x);
+	distnaceY = Mathf.Abs(this.transform.position.y - player.position.y);
+	if (distanceX < 1 && distanceY < 1){
 		renderer.material.shader = HIGHLIGHTED_SHADER;
 		if (Input.GetButtonDown(which_button)) {
 			for (var i = 0; i < light_sources.length; i++) {
