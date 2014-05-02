@@ -86,14 +86,6 @@ function Update () {
 	
 	var grounded = isGrounded();
 	
-	if (Input.GetButtonDown("Jump")) {
-		if (grounded) {
-			Debug.Log("Jump!");
-		} else {
-			Debug.Log("Can't jump! Y-Position = " + controller.transform.position.y);
-		}
-	}
-	
 	// Jumping...
 	if (grounded && Input.GetButtonDown("Jump")) {		
 		// Reset gravity acceleration
@@ -156,5 +148,12 @@ function Update () {
 }
 
 function isGrounded() {
-	return Physics.Raycast(controller.transform.position, Vector3(0, -1, 0), heightAboveFloor + 0.01);
+	var surface : RaycastHit;
+	var grounded = Physics.Raycast(controller.transform.position, Vector3(0, -1, 0), surface, heightAboveFloor + 0.01);
+	
+	if (grounded) {
+		Debug.Log(surface.collider);
+	}
+	
+	return grounded;
 }
