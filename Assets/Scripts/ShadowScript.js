@@ -565,8 +565,8 @@ function CastWallShadow(x: float, z: float){
 	}
 
 	var w =  newRight - newLeft;
-	colliderV.size = Vector3(w, shadowDepth, shadowDepth);
-	colliderV.center = Vector3(newRight - w/2, objFloorY + objHeight - shadowDepth/2, newBack);
+	colliderV.size = Vector3(w, objHeight, shadowDepth);
+	colliderV.center = Vector3(newRight - w/2, objOriginY, newBack);
 
 }
 function CastElevatedShadow(x: float, y: float, z: float){
@@ -645,9 +645,8 @@ function CastElevatedShadow(x: float, y: float, z: float){
 	// 	   Vector3(newRight, objOriginY + mYZ * objDepth/2  , newBack)];
 
 	var w =  newRight - newLeft;
-	colliderV.size = Vector3(w, shadowDepth, shadowDepth);
-	colliderV.center = Vector3(newRight - w/2, objOriginY + objHeight - shadowDepth/2, newBack);
-
+	colliderV.size = Vector3(w, objHeight, shadowDepth);
+	colliderV.center = Vector3(newRight - w/2, objOriginY, newBack);
 }
 function AddShadowCollisionDetection(){
 	switch(collisionMode){
