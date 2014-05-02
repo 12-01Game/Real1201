@@ -173,7 +173,7 @@ function Start () {
 	grab = false;
 	secondGrab = false;
 	movement = GetComponent(CharacterScript4Sam);
-	speed = movement.speed;	
+	speed = movement.speed;
 }
 
 function Update () {

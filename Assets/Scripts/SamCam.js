@@ -42,5 +42,5 @@ function Update () {
 }
 
 function OnGUI() {
-	GUI.DrawTexture(Rect(0, 0 , Screen.width, Screen.height), texture);
+	//GUI.DrawTexture(Rect(0, 0 , Screen.width, Screen.height), texture);
 }

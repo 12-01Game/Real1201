@@ -11,7 +11,7 @@ private static final var hint4 =
 private static final var hint5 = 
 	"You might need objects from previous puzzles to overcome future puzzles!";
 
-private static var displayHint;
+private static var displayHint : String;
 
 private static var hints : Array;
 function Start () {
@@ -34,6 +34,10 @@ function OnTriggerEnter(collider : Collider) {
 		var name = collider.gameObject.name.Substring(4);
 		var index = int.Parse(name);
 		
-		print(hints[index]);
+		displayHint = hints[index];
 	}
+}
+
+function OnGUI() {
+	GUI.Label(Rect(140, Screen.height-50, Screen.width-300, 120), displayHint);
 }
