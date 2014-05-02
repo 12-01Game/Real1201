@@ -1,24 +1,31 @@
-﻿static final var BINGO_NAME : String = "Bingo";
+﻿static final var BINGO_NAME 		: String = "Bingo";
+static final var HANK_NAME			: String = "Hank";
 
-private var subject : Transform;
-var texture : Texture;
+private var sam   					: Transform;
+private var hank 					: Transform;
+var texture 						: Texture;
 
-private var subjectX : float;
-private var cameraX : float;
+private var subjectX 				: float;
+private var cameraX 				: float;
 
-private static final var distance : float = 30.0;
-private static final var height	 : float = 5.6;
+private var distance 				: float = 30.0;		// This will change depending upon where Hank is
+private var distToGo				: float = 0.0;
+private var isZoomedOut				: boolean = false;
+private static final var height	 	: float = 5.6;
 
 function Start () {
-	subject = GameObject.Find(BINGO_NAME).transform;
+	sam = GameObject.Find(BINGO_NAME).transform;
+	hank = GameObject.Find(HANK_NAME).transform;
 }
 
 function LateUpdate () {
 
-	subjectX = subject.position.x;
+	subjectX = sam.position.x;
 	cameraX = transform.position.x;
 	
-	transform.position = Vector3.Lerp (Vector3(cameraX, height, -1 * distance), Vector3(subjectX, height, -1 * distance), Time.deltaTime * 4);
+	timeDelta = Time.deltaTime * 3;
+	transform.position = Vector3.Lerp(Vector3(cameraX, height, -1 * distance), Vector3(subjectX, height, -1 * distance), timeDelta);
+	distToGo = distToGo - (distToGo * timeDelta);
 	// transform.position.x = subject.position.x;
 }
 
