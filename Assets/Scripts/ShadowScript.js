@@ -1,4 +1,4 @@
-﻿/*
+/*
  *	ShadowScript.js
  *
  *	The engine that generates interactive shadows in the game world.
@@ -682,12 +682,11 @@ function PushPopCollision(){
 			var colliderCenter : float = colliderV.center.y;
 			if(hankBottom < colliderCenter - collisionThreshold){
 				if(hankCenter > colliderLeft){
-					if(hankCenter < colliderRight)
-						PushHankToTop();
-					else if(hankLeft < colliderRight)
+					if(hankCenter <= colliderCenter)
+						PushHankToLeft();
+					else
 						PushHankToRight();
-				}else if(hankRight > colliderLeft)
-					PushHankToLeft();
+				}
 			}
 		}
 	}catch(exception){}
