@@ -33,11 +33,6 @@ private var fallFrames			: int = 1;						// How long has this character been fal
 private var shouldFaceAngle		: float = 180;
 private var currFaceAngle		: float = 0;
 
-private var anim				: Animation;
-//private var idleMotion			: String = "standard_idle_1";
-private var walkMotion			: String = "HankWalk";
-//private var walkBackwards		: String = "walking_backward_1";
-
 private var heightAboveFloor : float;
 
 private var shouldLockTo : float;		// Kind of a hacky fix but it works. Keeps Hank locked to his axis so he won't go crazy and fall off the level
@@ -50,7 +45,6 @@ private var shouldLockTo : float;		// Kind of a hacky fix but it works. Keeps Ha
 function Awake() {
 	faceVector = transform.TransformDirection(Vector3.left);
 	controller = GetComponent("CharacterController");
-	anim = GetComponent(Animation);
 	
 	var floorY = GameObject.Find("Floor Level").collider.bounds.max.y;
 	heightAboveFloor = controller.transform.position.y - floorY;
@@ -119,15 +113,6 @@ function Update () {
 		}
 		else if (xMotion < 0) {
 			shouldFaceAngle = 0;
-		}
-		
-		// Play animation if there's xMotion
-		if (Mathf.Abs(xMotion) > 2) {
-			anim.Play(walkMotion);
-		}
-		else {
-			//anim.Stop();
-			//anim.Play(idleMotion);
 		}
 	}
 	
