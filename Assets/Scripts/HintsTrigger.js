@@ -15,7 +15,9 @@ private static var displayHint : String;
 
 private static var hints : Array;
 
-private var callGUI = true;
+private var callGUI = false;
+
+var font : Font;
 
 function Start () {
 	hints = new Array();
@@ -24,7 +26,6 @@ function Start () {
 	hints.push(hint3);
 	hints.push(hint4);
 	hints.push(hint5);
-	
 }
 
 function Update () {
@@ -48,6 +49,15 @@ function OnTriggerExit(collider : Collider) {
 }
 
 function OnGUI() {
-	if (callGUI)
-		GUI.Label(Rect(140, Screen.height-50, Screen.width-300, 120), displayHint);
+	if (callGUI) {
+		GUI.skin.font = font;
+		GUI.skin.label.alignment = TextAnchor.UpperCenter;
+		var left = Screen.width*.01;
+		var top = Screen.height*.9;
+		var width = Screen.width;
+		var height = Screen.height*.3;
+		GUI.Label(Rect(left, top, width, height), displayHint);
+	}
+	
+	
 }

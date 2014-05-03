@@ -433,7 +433,7 @@ function ShadowFade(){
 	try{
 		shadowH.renderer.material.color.a = (1 - d / triggerDistance) * maxShadowAlpha;
 	}catch(exception){}
-	Debug.Log(shadowV.renderer.material.color.a);
+	//Debug.Log(shadowV.renderer.material.color.a);
 }
 function ShadowColliderManager(left:float,right:float,back:float){
 	var w =  right - left;
