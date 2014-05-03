@@ -9,4 +9,5 @@ function Awake() {
 
 function TurnOn() {
 	shadow_barrier.SetActive(false);
+	light.enabled = true;
 }
