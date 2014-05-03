@@ -206,7 +206,7 @@ function CreateVerticalShadow(){
 
 	colliderV = shadowV.AddComponent("BoxCollider");
 	colliderV.size = Vector3(objWidth, objHeight, shadowColliderDepth);
-	colliderV.center = Vector3(objRightX - objWidth/2, objFloorY + heightScaleOffset * 2, objBackZ + objToWallDistance);
+-	colliderV.center = Vector3(objRightX - objWidth/2, objFloorY + objHeight/2, objBackZ + objToWallDistance);
 
 	shadowMeshV = new Mesh();	// Make a new shadow mesh
 	shadowMeshV.name = gameObject.name + "_Shadow_Mesh_V";
@@ -347,7 +347,7 @@ function RepositionShadow() {
 		   Vector3(objRightX - objWidth, objFloorY + objHeight + heightScaleOffset, objBackZ + objToWallDistance),
 		   Vector3(objRightX, objFloorY + objHeight + heightScaleOffset, objBackZ + objToWallDistance)];
 
-	colliderV.center = Vector3(objRightX - objWidth/2, objFloorY + heightScaleOffset * 2, objBackZ + objToWallDistance);
+-	colliderV.center = Vector3(objRightX - objWidth/2, objFloorY + objHeight/2, objBackZ + objToWallDistance);
 
 	// Define triangles
 	if (reverseTriWinding) {
@@ -437,7 +437,7 @@ function ShadowFade(){
 }
 function ShadowColliderManager(left:float,right:float,back:float){
 	var w =  right - left;
-	colliderV.center = Vector3(right - w/2, objOriginY + heightScaleOffset * 2, back);
+-	colliderV.center = Vector3(right - w/2, objOriginY, back);
 
 	if(shadowV.renderer.material.color.a >= shadowColliderAlphaThreshold){
 		colliderV.size = Vector3(w, objHeight, shadowColliderDepth);
