@@ -4,12 +4,12 @@ var isStart=false;
 
 function OnMouseEnter(){
 	//change text color
-	renderer.material.color=Color.green;
+	renderer.material.color=Color(1, 1, 1, 1);
 }
 
 function OnMouseExit(){
 	//change text color
-	renderer.material.color=Color(0.33, 0.52, 0.6, 1);
+	renderer.material.color=Color(1, 1, 1, .25);
 }
 
 function OnMouseUp(){
@@ -18,6 +18,11 @@ function OnMouseUp(){
 		//load the first level
 		Application.LoadLevel(1);
 	}
+}
+
+function Start() {
+	// start unselected
+	renderer.material.color = Color(1, 1, 1, .25);
 }
 
 function Update(){
