@@ -4,8 +4,8 @@ var light_sources = new GameObject[0];
 var player : Transform;
 var distanceX : float;
 var distanceY : float;
-var on : boolean = false;
 
+private var on : boolean = false;
 private var which_button : String;
 private var defaultShader;
 private var highlightedShader;
