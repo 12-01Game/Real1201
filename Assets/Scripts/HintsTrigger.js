@@ -38,7 +38,7 @@ function OnTriggerStay(collider : Collider) {
 		var name = collider.gameObject.name.Substring(4);
 		var index = int.Parse(name);
 		
-		displayHint = hints[index];
+		displayHint = hints[index-1];
 	}
 }
 
