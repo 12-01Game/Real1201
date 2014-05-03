@@ -1,15 +1,12 @@
-﻿#pragma strict
+#pragma strict
 
 var shadow_barrier : GameObject;
 var lightsource : GameObject;
 
-function Update() {
+function Awake() {
+    light.enabled = false;
+}
 
-	if(lightsource.light.enabled) {
-		shadow_barrier.SetActive(false);
-	}
-	else {
-		shadow_barrier.SetActive(true);
-	}
-
+function TurnOn() {
+	shadow_barrier.SetActive(false);
 }
