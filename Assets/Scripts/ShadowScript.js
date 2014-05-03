@@ -103,16 +103,17 @@ function DefineDimensions(){
 		objOriginZ = combinedBounds.center.z;
 	}
 
+	// Do some scaling
+	heightScaleOffset = ((objHeight * scalingHeightVar) - objHeight) / 2;
+	objWidth = objWidth * scalingWidthVar;
+	objHeight = objHeight * scalingHeightVar;	
+
 	objRightX = objOriginX + (objWidth / 2);
 	objLeftX = objOriginX - (objWidth / 2);
 	objFloorY = objOriginY - (objHeight / 2) + SHADOW_OFFSET;
 	objBackZ = objOriginZ + (objDepth / 2);
 	objFrontZ = objOriginZ - (objDepth / 2);
 
-	// Do some scaling
-	heightScaleOffset = ((objHeight * scalingHeightVar) - objHeight) / 2;
-	objWidth = objWidth * scalingWidthVar;
-	objHeight = objHeight * scalingHeightVar;	
 
 	var wall : GameObject = GameObject.Find(WALL_NAME);
 	objToWallDistance = Mathf.Abs(wall.renderer.transform.position.z - objOriginZ - objDepth / 2) - SHADOW_OFFSET;
@@ -206,7 +207,7 @@ function CreateVerticalShadow(){
 
 	colliderV = shadowV.AddComponent("BoxCollider");
 	colliderV.size = Vector3(objWidth, objHeight, shadowColliderDepth);
--	colliderV.center = Vector3(objRightX - objWidth/2, objFloorY + objHeight/2, objBackZ + objToWallDistance);
+	colliderV.center = Vector3(objRightX - objWidth/2, objFloorY + objHeight/2, objBackZ + objToWallDistance);
 
 	shadowMeshV = new Mesh();	// Make a new shadow mesh
 	shadowMeshV.name = gameObject.name + "_Shadow_Mesh_V";
@@ -347,7 +348,7 @@ function RepositionShadow() {
 		   Vector3(objRightX - objWidth, objFloorY + objHeight + heightScaleOffset, objBackZ + objToWallDistance),
 		   Vector3(objRightX, objFloorY + objHeight + heightScaleOffset, objBackZ + objToWallDistance)];
 
--	colliderV.center = Vector3(objRightX - objWidth/2, objFloorY + objHeight/2, objBackZ + objToWallDistance);
+	colliderV.center = Vector3(objRightX - objWidth/2, objFloorY + objHeight/2, objBackZ + objToWallDistance);
 
 	// Define triangles
 	if (reverseTriWinding) {
@@ -433,11 +434,10 @@ function ShadowFade(){
 	try{
 		shadowH.renderer.material.color.a = (1 - d / triggerDistance) * maxShadowAlpha;
 	}catch(exception){}
-	//Debug.Log(shadowV.renderer.material.color.a);
 }
 function ShadowColliderManager(left:float,right:float,back:float){
 	var w =  right - left;
--	colliderV.center = Vector3(right - w/2, objOriginY, back);
+	colliderV.center = Vector3(right - w/2, objOriginY + heightScaleOffset, back);
 
 	if(shadowV.renderer.material.color.a >= shadowColliderAlphaThreshold){
 		colliderV.size = Vector3(w, objHeight, shadowColliderDepth);
@@ -775,5 +775,8 @@ function playerIsFacing() {
 		dot = Quaternion.Dot(rotation, Quaternion(0.0, 0.0, 0.0, 1.0));	// facing left
 	}
 	if(dot > 0.5) return true;
+	else return false;
+}
+rn true;
 	else return false;
 }
