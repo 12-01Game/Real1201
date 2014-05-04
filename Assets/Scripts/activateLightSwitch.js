@@ -5,6 +5,8 @@ var player : Transform;
 var distanceX : float;
 var distanceY : float;
 
+var sfx		  : AudioClip;
+
 private var on : boolean = false;
 private var which_button : String;
 private var defaultShader;
@@ -26,6 +28,7 @@ function Update() {
 	if (!on && distanceX < 1 && distanceY < 1) {
 		renderer.material.shader = highlightedShader;
 		if (Input.GetButtonDown(which_button)) {
+			audio.PlayOneShot(sfx);
             on = true;
 			for (var i = 0; i < light_sources.length; i++) {
 				light_sources[i].light.enabled = true;

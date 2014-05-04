@@ -42,11 +42,7 @@ private var currFaceAngle		: float = 0;
 private var isScared			: boolean = false;				// Determines if Sam is controllable or if Sam is being controlled by the CPU
 private var runDistance 		: float = 0.0;
 
-private var anim				: Animation;
-private var idleMotion			: String = "standard_idle_1";
-private var walkMotion			: String = "walking";
-private var walkBackwards		: String = "walking_backward_1";
-
+private var animator			: Animator;						// The animator for Sam
 
 /*
  *	Awake()
@@ -57,7 +53,7 @@ function Awake() {
 	faceVector = transform.TransformDirection(Vector3.left);
 	controller = GetComponent("CharacterController");
 	bingo =  transform.Find("Bingo");
-	anim = GetComponentsInChildren(Animation)[0];
+	animator = GetComponentsInChildren(Animator)[0];
 }
 
 /*
@@ -164,21 +160,6 @@ function Update () {
 		}
 		else if (Input.GetAxis("LockRight") > 0) {
 			shouldFaceAngle = 180;
-		}
-		
-		// Play animation if there's xMotion
-		if (Mathf.Abs(xMotion) > 2) {
-			// Walk backwards?
-			if ((Input.GetAxis("LockLeft") > 0 && xMotion > 0) || (Input.GetAxis("LockRight") > 0 && xMotion < 0)) {
-					anim.Play(walkBackwards);
-			}
-			else {
-				anim.Play(walkMotion);
-			}
-		}
-		else {
-			anim.Stop();
-			anim.Play(idleMotion);
 		}
 	}
 	
