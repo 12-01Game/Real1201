@@ -777,6 +777,3 @@ function playerIsFacing() {
 	if(dot > 0.5) return true;
 	else return false;
 }
-rn true;
-	else return false;
-}

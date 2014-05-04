@@ -24,6 +24,8 @@ var gravity						: float = .0981;		// Control how much gravity this character is
 
 private var controller			: CharacterController;			// The CharacterController component that must be attached to this character
 
+private var animator			: Animator;						// The animator for Hank
+
 private var faceVector			: Vector3 = Vector3.zero;		// The vector the character moves on
 private var downVector			: Vector3 = Vector3.down;		// The vector the character falls on
 private var savedYMotion		: float = 0;					// When the character is airborne, use this value to figure out how much the player should 
@@ -45,6 +47,8 @@ private var shouldLockTo : float;		// Kind of a hacky fix but it works. Keeps Ha
 function Awake() {
 	faceVector = transform.TransformDirection(Vector3.left);
 	controller = GetComponent("CharacterController");
+	
+	animator = GetComponent("Animator");
 	
 	var floorY = GameObject.Find("Floor Level").collider.bounds.max.y;
 	heightAboveFloor = controller.transform.position.y - floorY;
@@ -82,6 +86,7 @@ function Update () {
 	
 	// Get desired X-motion
 	var xMotion = Input.GetAxis(player + "Horizontal") * speed;
+	animator.SetFloat("Speed", Mathf.Abs(xMotion));
 	
 	var yMotion = 0;
 	
