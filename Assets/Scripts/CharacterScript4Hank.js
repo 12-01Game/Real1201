@@ -96,12 +96,12 @@ function Update () {
 		// Reset gravity acceleration
 		fallFrames = 1;
 		yMotion = jumpForce;
-		// animator.SetBoolean("isJumping", true);
+		animator.SetBool("isJumping", true);
 	}
 
 	// Grounded...
 	else if (grounded) {
-		// animator.SetBoolean("isJumping", false);
+		animator.SetBool("isJumping", false);
 	
 		// Reset gravity acceleration
 		fallFrames = 1;
