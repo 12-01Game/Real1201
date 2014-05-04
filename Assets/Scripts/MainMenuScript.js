@@ -6,7 +6,9 @@ private var fadeOut : boolean;
 private var origAValue : float;
 private var mesh : TextMesh;
 private var startPressed : boolean;
+private var aPressed : boolean;
 
+var buttonMap : GUITexture;
 /*
 function OnMouseEnter(){
 	//change text color
@@ -35,6 +37,7 @@ function Start() {
 	objColor = mesh.color;
 	fadeOut = true;
 	origAValue = mesh.color.a;
+	buttonMap.active = false;
 }
 
 function Update(){
@@ -46,9 +49,18 @@ function Update(){
 	if (Input.GetButtonDown("Start")) {
 		startPressed = true;
 	}
-	if (startPressed) {
-		mesh.text = "Press A";
+	if (Input.GetButtonDown("pushAStartMenu")) {
+		aPressed = true;
 	}
+	
+	if (startPressed && aPressed) {
+		Application.LoadLevel("Level1");
+	}
+	else if (startPressed) {
+		mesh.text = "Press A";
+		buttonMap.active = true;
+	}
+	
 }
 
 function Fade() {
