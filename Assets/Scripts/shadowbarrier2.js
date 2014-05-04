@@ -3,6 +3,8 @@
 var shadow_barrier : GameObject;
 var lightsource : GameObject;
 
+private var shouldShowTooltip : boolean;
+
 function Awake() {
     light.enabled = false;
 }

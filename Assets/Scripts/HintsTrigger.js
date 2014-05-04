@@ -1,7 +1,7 @@
 ﻿#pragma strict
 
 private static final var hint1 = 
-	"Let Hank jump on the shadows you cast on certain objects. The goal is to dispel the large shadows preventing Sam from reaching the door.";
+	"Sam can use his flashlight to cast shadows for Hank to jump on";
 private static final var hint2 = 
 	"Hank needs to dispel the large shadow by flipping the light switch. Press X! Objects that you can interact with glow brightly.";
 private static final var hint3 = 
@@ -44,16 +44,20 @@ function OnTriggerStay(collider : Collider) {
 }
 
 function OnTriggerExit(collider : Collider) {
-	yield WaitForSeconds(1);
+	yield WaitForSeconds(5);
 	callGUI = false;
 }
 
 function OnGUI() {
 	if (callGUI) {
+		
 		GUI.skin.font = font;
+		GUI.skin.label.fontSize = 36;
+		GUI.color = Color.white;
+		
 		GUI.skin.label.alignment = TextAnchor.UpperCenter;
 		var left = Screen.width*.01;
-		var top = Screen.height*.9;
+		var top = Screen.height*.85;
 		var width = Screen.width;
 		var height = Screen.height*.3;
 		GUI.Label(Rect(left, top, width, height), displayHint);
