@@ -1,5 +1,8 @@
 ﻿#pragma strict
 
+private static final var shadowWallHint =
+	"Sam can not proceed until this part of the room is lit! Help Hank activate the light switch to continue.";
+
 private static final var hint1 = 
 	"Sam can use his flashlight to cast shadows for Hank to jump on";
 private static final var hint2 = 
@@ -41,6 +44,10 @@ function OnTriggerStay(collider : Collider) {
 		
 		displayHint = hints[index-1];
 	}
+	else if (collider.gameObject.tag == "ShadowWall") {
+		callGUI = true;
+		displayHint = shadowWallHint;
+	}
 }
 
 function OnTriggerExit(collider : Collider) {
@@ -50,7 +57,6 @@ function OnTriggerExit(collider : Collider) {
 
 function OnGUI() {
 	if (callGUI) {
-		
 		GUI.skin.font = font;
 		GUI.skin.label.fontSize = 36;
 		GUI.color = Color.white;
