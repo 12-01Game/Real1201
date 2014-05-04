@@ -205,7 +205,7 @@ CONTROLLER CODE CURRENTLY DOESN'T WORK - I'm working on it! Should be finished o
 */
 function shift() {
 	//controller or 's' key
-	if (pressed && /*(Mathf.Abs(Input.GetAxis("Shift")) >= 0.5) &&*/ !inMotion) {
+	if (pressed && (Mathf.Abs(Input.GetAxis("Shift")) >= 0.5) && !inMotion) {
 		print("Shift");
 		//print(Input.GetAxis("Shift"));
 		if (object != null) {

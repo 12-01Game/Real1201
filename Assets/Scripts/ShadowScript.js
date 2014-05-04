@@ -28,7 +28,7 @@ private var shadowColliderDepth	: float 	= 1.0;			// depth of shadow collider
 private final var WALL_NAME 		: String 	= "BackWall";	// Name identifier for the back wall to calculate objDistanceToWall
 private final var SAM_NAME 			: String 	= "Sam";		// Name identifier for player1
 private final var HANK_NAME			: String 	= "Hank";		// Name identifier for player2
-private final var SHADOW_OFFSET		: float		= 0.25;			// distance shadow is offset from plane
+private final var SHADOW_OFFSET		: float		= 0.5;			// distance shadow is offset from plane
 private final var triggerDistance 	: float 	= 15.0;			// distance at which Shadow Skewing is triggered
 
 // Object properties
@@ -62,7 +62,7 @@ private var isCastByLight		: boolean;			// whether or not the shadow is cast by 
 private var collisionMode					: int 		= 1; 		// 0 = PushPop, 1 = Shadow Blend, 2 = Quicksand
 private var collisionThreshold 				: float 	= 5;		// Threshold for shadow collision detection
 private var maxShadowAlpha					: float		= .5;		// Maximum alpha (opacity) value for shadows
-private var shadowColliderAlphaThreshold	: float 	= .1;		// Alpha threshold before shadow collider is generated
+private var shadowColliderAlphaThreshold	: float 	= .05;		// Alpha threshold before shadow collider is generated
 
 // Environment variables
 private var player 				: Transform;		// the player object to detect distance
