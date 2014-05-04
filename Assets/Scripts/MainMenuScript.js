@@ -1,7 +1,13 @@
 ﻿/* Source: https://www.youtube.com/watch?v=rNghvoEbEkM */
 
 var isStart=false;
+private var objColor : Color;
+private var fadeOut : boolean;
+private var origAValue : float;
+private var mesh : TextMesh;
+private var startPressed : boolean;
 
+/*
 function OnMouseEnter(){
 	//change text color
 	renderer.material.color=Color(1, 1, 1, 1);
@@ -19,15 +25,47 @@ function OnMouseUp(){
 		Application.LoadLevel(1);
 	}
 }
+*/
+
 
 function Start() {
 	// start unselected
-	renderer.material.color = Color(1, 1, 1, .25);
+	renderer.material.color = Color(1, 1, 1, .75);
+	mesh = GetComponent(TextMesh);
+	objColor = mesh.color;
+	fadeOut = true;
+	origAValue = mesh.color.a;
 }
 
 function Update(){
 	//quit game if escape key is pressed
 	if (Input.GetKey(KeyCode.Escape)) { 
 		Application.Quit();
+	}
+	Fade();
+	if (Input.GetButtonDown("Start")) {
+		startPressed = true;
+	}
+	if (startPressed) {
+		mesh.text = "Press A";
+	}
+}
+
+function Fade() {
+	if (fadeOut) {
+		while (mesh.color.a > 0) {
+			mesh.color.a -= .15*Time.deltaTime;//.003;//Time.deltaTime*.5;
+			yield WaitForSeconds(.1);
+			//yield;
+		}
+		fadeOut = false;
+	}
+	else {
+		while (mesh.color.a < origAValue) {
+			mesh.color.a += .15*Time.deltaTime;//.003;//Time.deltaTime*.5;
+			yield WaitForSeconds(.1);
+			// yield;
+		}
+		fadeOut = true;
 	}
 }

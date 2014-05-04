@@ -28,17 +28,6 @@ private final var pushAxis = "Push";
 /*Axis for interaction with various objects */
 private final var interactAxis = "Activate";
 
-/*
-private final var pushWin = "Push_Windows";
-
-private final var pushMac = "Push_Mac";
-
-private final var shiftWin = "Shift_Windows";
-
-private final var shiftMac = "Shift_Mac";
-*/
-
-private var psychicPowers = false;
 
 //PUBLIC
 //------------------------------------------------------
@@ -190,7 +179,7 @@ function Update () {
 	pushnpull();
 	
 	/* interact with objects code */
-	interact();
+	//interact();
 }
 
 /*Determines the appropriate amount to shift a pushpull object by - 
@@ -216,7 +205,7 @@ CONTROLLER CODE CURRENTLY DOESN'T WORK - I'm working on it! Should be finished o
 */
 function shift() {
 	//controller or 's' key
-	if (pressed && (Mathf.Abs(Input.GetAxis("Shift")) >= 0.5) && !inMotion) {
+	if (pressed && /*(Mathf.Abs(Input.GetAxis("Shift")) >= 0.5) &&*/ !inMotion) {
 		print("Shift");
 		//print(Input.GetAxis("Shift"));
 		if (object != null) {
@@ -240,26 +229,18 @@ function shift() {
 						continue;
 					}
 
-					if (obj.tag != "Floor" && obj.tag != "Shadow" && obj.tag != "Player2"
+					if (obj.tag != "Floor" && obj.tag != "Shadow" && obj.tag != "Player2" && obj.tag != "Tooltip"
 					  && tempColl.bounds.Intersects(obj.collider.bounds)
 					  && !obj.transform.IsChildOf(object.transform)
 					  && obj.tag != copy) {
+					  	print(tempColl.bounds.Intersects(obj.collider.bounds));
 						shiftable = false;
 					}
+
 				}
 				shiftObject = object;
 				/*This section gives a delayed animation to the object shift */
 				if (shiftObject != null && shiftable) {
-					/*Initial objective checks */
-					if (shiftObject.name == "Shift Chair") {
-						if (chair_objective) {
-							call_gui = false;
-						}
-						else {
-							call_gui = true;
-							//return;
-						}
-					}
 					var vect = getVect();
 					var duration = 1/Time.deltaTime;
 					var yieldTime = .0001;
@@ -274,7 +255,7 @@ function shift() {
 					}
 					if (obj_copy != null)
 						obj_copy.transform.position.z += shift;
-					if (obj_copy != null)
+					if (obj_copy2 != null)
 						obj_copy2.transform.position.z += shift;
 				}
 				else if (!shiftable) {
@@ -299,7 +280,6 @@ CONTROLLER CODE CURRENTLY DOESN'T WORK - I'm working on it! Should be finished o
 function pushnpull() {
 	// "B" Button or 'z' key
 	if ((Input.GetKeyDown("z") || pressed)) {
-		print("Can Push");
 		grab = true;
 	}
 	if (Input.GetKeyUp("z") || !pressed) {
@@ -419,40 +399,6 @@ function interact() {
 			tries to shift objects into other objects or just does weird stuff
 		*/
 	}
-}
-
-/*Used to enforce certain level prereqs 
-TODO ensure message prints only once and fix bugs
-*/
-function valid() {
-	var returned = true;
-	if (object == null)
-		return true;
-/*
-	if (object.name == "Shift Chair") {
-		returned = (Mathf.Abs(object.transform.rotation.y - 360) < 5) ? true : false;
-		if (!returned) {
-			print("You should rotate the chair! Press 'i'!");
-		}
-	}
-*/
-		//more cases
-	
-	return returned;
-}
-
-
-function OnGUI() {
-	if (object != null) {
-		//GUI.Box(Rect(140, Screen.height-50, Screen.width-300, 120), "HEY THERE");
-		//GUI.color = Color.yellow;
-		//GUI.Box(Rect(9, 30, 500, 20), "hey", style);
-	}
-	//GUI.Box(Rect(9, 30, 30, 20), "hey", style.customStyles[0]);
-	
-	//if (call_gui)
-		//GUI.Box(Rect(140, Screen.height-50, Screen.width-300, 120), "Hey Listen");
-		//GUI.Label(Rect(140, Screen.height-50, Screen.width-300, 120), "sample text");
 }
 
 
