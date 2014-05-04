@@ -60,7 +60,7 @@ private var isVisible 			: boolean;			// whether or not the shadow is currently 
 private var isCastByLight		: boolean;			// whether or not the shadow is cast by the nearest light
 
 private var collisionMode					: int 		= 1; 		// 0 = PushPop, 1 = Shadow Blend, 2 = Quicksand
-private var collisionThreshold 				: float 	= 0.33;		// Threshold for shadow collision detection
+private var collisionThreshold 				: float 	= 5;		// Threshold for shadow collision detection
 private var maxShadowAlpha					: float		= .5;		// Maximum alpha (opacity) value for shadows
 private var shadowColliderAlphaThreshold	: float 	= .1;		// Alpha threshold before shadow collider is generated
 

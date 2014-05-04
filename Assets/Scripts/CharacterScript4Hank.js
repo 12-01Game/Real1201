@@ -24,7 +24,7 @@ var gravity						: float = .0981;		// Control how much gravity this character is
 
 private var controller			: CharacterController;			// The CharacterController component that must be attached to this character
 
-// private var animator			: Animator;						// The animator for Hank
+private var animator			: Animator;						// The animator for Hank
 
 private var faceVector			: Vector3 = Vector3.zero;		// The vector the character moves on
 private var downVector			: Vector3 = Vector3.down;		// The vector the character falls on
@@ -48,7 +48,7 @@ function Awake() {
 	faceVector = transform.TransformDirection(Vector3.left);
 	controller = GetComponent("CharacterController");
 	
-	// animator = GetComponent("Animator");
+	animator = GetComponent("Animator");
 	
 	var floorY = GameObject.Find("Floor Level").collider.bounds.max.y;
 	heightAboveFloor = controller.transform.position.y - floorY;
@@ -86,7 +86,7 @@ function Update () {
 	
 	// Get desired X-motion
 	var xMotion = Input.GetAxis(player + "Horizontal") * speed;
-	// animator.SetFloat("Speed", Mathf.Abs(xMotion));
+	animator.SetFloat("Speed", Mathf.Abs(xMotion));
 	
 	var yMotion = 0;
 	
@@ -96,10 +96,12 @@ function Update () {
 		// Reset gravity acceleration
 		fallFrames = 1;
 		yMotion = jumpForce;
+		// animator.SetBoolean("isJumping", true);
 	}
 
 	// Grounded...
 	else if (grounded) {
+		// animator.SetBoolean("isJumping", false);
 	
 		// Reset gravity acceleration
 		fallFrames = 1;
