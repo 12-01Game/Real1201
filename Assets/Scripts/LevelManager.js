@@ -33,7 +33,7 @@ function OnTriggerEnter(collider : Collider) {
 		
 		//samAnimation.Play(SAM_SUCCESS);
         //hankAnimation.Play(HANK_SUCCESS);
-        yield WaitForSeconds (5);
+        yield WaitForSeconds (8);
         cameraFade.fadeOut();
         Application.LoadLevel(nextLevel);
 	}
