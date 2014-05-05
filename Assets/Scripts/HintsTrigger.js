@@ -8,9 +8,9 @@ private static final var hint1 =
 private static final var hint2 = 
 	"Hank needs to dispel the large shadow by flipping the light switch. Press X! Objects that you can interact with glow brightly.";
 private static final var hint3 = 
-	"You can move certain objects into your path by holding X and pushing up or down with the left control stick.";
+	"You can interact with glowing objects by pressing the X button";
 private static final var hint4 = 
-	"You can then push and pull objects by holding X and moving left or right with the left control stick.";
+	"Sam can use the left and right trigger buttons to lock his position";
 private static final var hint5 = 
 	"You might need objects from previous puzzles to overcome future puzzles!";
 

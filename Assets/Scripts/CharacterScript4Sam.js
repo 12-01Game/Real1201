@@ -45,6 +45,8 @@ private var runDistance 		: float = 0.0;
 private var animator			: Animator;						// The animator for Sam
 private var shouldWalkBackwards : boolean;
 
+var shouldDisableControls = false;
+
 /*
  *	Awake()
  *
@@ -197,9 +199,14 @@ function Update () {
 		// Use the X-motion right before the character got airborne
 		xMotion = savedXMotion;
 	}
-		
-	// Move	
-	controller.Move(Vector3(xMotion * Time.deltaTime, yMotion * Time.deltaTime, 0));
+	
+	if (shouldDisableControls) {
+		controller.Move(Vector3(0, 0, 0));;
+	}
+	else {	
+		// Move	
+		controller.Move(Vector3(xMotion * Time.deltaTime, yMotion * Time.deltaTime, 0));
+	}
 	
 	if (shouldWalkBackwards) {
 		animator.SetFloat("Speed", -1 * Mathf.Abs(xMotion));

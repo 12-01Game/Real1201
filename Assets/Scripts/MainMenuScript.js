@@ -54,7 +54,7 @@ function Update(){
 	}
 	
 	if (startPressed && aPressed) {
-		Application.LoadLevel("Level1");
+		Application.LoadLevel("Intro");
 	}
 	else if (startPressed) {
 		mesh.text = "OK? PRESS A";
