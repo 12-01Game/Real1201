@@ -106,6 +106,8 @@ private var chair_rotation_count = 0;
 /*Says whether we want GUI messages to be shown */
 private var call_gui = false;
 
+private var animator : Animator;
+
 /** 
 Initializes manipulable gameobject: go
 Sets go's tag to "Copy"
@@ -155,6 +157,8 @@ function Start () {
 		
 		//Copy.AddComponent(ShiftTriggerScript);
 		Copy2.AddComponent(ShiftTriggerScript2);
+		
+		animator = GetComponentsInChildren(Animator)[0];
 	}
 	
 	go.AddComponent(BoxCollider);
@@ -311,10 +315,21 @@ function pushnpull() {
 				obj_copy.transform.position.x += delta;
 			if (obj_copy2 != null)
 				obj_copy2.transform.position.x += delta;
+			
+			if (movement.speed > 0) {
+				animator.SetBool("isPulling", true);
+				animator.SetBool("isPushing", false);
+			}
+			else if (movement.speed < 0) {
+				animator.SetBool("isPulling", false);
+				animator.SetBool("isPushing", true);
+			}
 		}
 	}
 	if (!grab) {
 		movement.speed = speed;
+		animator.SetBool("isPulling", false);
+		animator.SetBool("isPushing", false);
 	}
 }
 /*Allows sam to interact with particular objects based on case-by-case conditions and 

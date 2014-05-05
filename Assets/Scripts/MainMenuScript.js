@@ -57,7 +57,7 @@ function Update(){
 		Application.LoadLevel("Level1");
 	}
 	else if (startPressed) {
-		mesh.text = "Press A";
+		mesh.text = "OK? PRESS A";
 		buttonMap.active = true;
 	}
 	

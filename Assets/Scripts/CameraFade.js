@@ -1,7 +1,7 @@
 ﻿#pragma strict
 
 public var fadeOutTexture : Texture2D;
-public var fadeSpeed = 0.3;
+public var fadeSpeed = 4.0;
  
 var drawDepth = -1000;
  

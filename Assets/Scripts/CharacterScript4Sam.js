@@ -43,6 +43,7 @@ private var isScared			: boolean = false;				// Determines if Sam is controllabl
 private var runDistance 		: float = 0.0;
 
 private var animator			: Animator;						// The animator for Sam
+private var shouldWalkBackwards : boolean;
 
 /*
  *	Awake()
@@ -155,11 +156,28 @@ function Update () {
 		}
 		
 		// Override with strife
+		shouldWalkBackwards = false;
 		if (Input.GetAxis("LockLeft") > 0) {
 			shouldFaceAngle = 0;
+			
+			// Should walk backwards
+			if (xMotion > 0) {
+				shouldWalkBackwards = true;
+			}
+			else {
+				shouldWalkBackwards = false;
+			}
 		}
 		else if (Input.GetAxis("LockRight") > 0) {
 			shouldFaceAngle = 180;
+			
+			// Should walk backwards
+			if (xMotion < 0) {
+				shouldWalkBackwards = true;
+			}
+			else {
+				shouldWalkBackwards = false;
+			}
 		}
 	}
 	
@@ -182,7 +200,13 @@ function Update () {
 		
 	// Move	
 	controller.Move(Vector3(xMotion * Time.deltaTime, yMotion * Time.deltaTime, 0));
-	animator.SetFloat("Speed", Mathf.Abs(xMotion));
+	
+	if (shouldWalkBackwards) {
+		animator.SetFloat("Speed", -1 * Mathf.Abs(xMotion));
+	}
+	else {
+		animator.SetFloat("Speed", Mathf.Abs(xMotion));
+	}
 	
 	// Save the motions
 	savedXMotion = xMotion;
