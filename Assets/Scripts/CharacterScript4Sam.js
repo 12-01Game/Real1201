@@ -182,6 +182,7 @@ function Update () {
 		
 	// Move	
 	controller.Move(Vector3(xMotion * Time.deltaTime, yMotion * Time.deltaTime, 0));
+	animator.SetFloat("Speed", Mathf.Abs(xMotion));
 	
 	// Save the motions
 	savedXMotion = xMotion;
