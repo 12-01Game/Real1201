@@ -33,8 +33,17 @@ function OnTriggerEnter(collider : Collider) {
 		
 		//samAnimation.Play(SAM_SUCCESS);
         //hankAnimation.Play(HANK_SUCCESS);
-        yield WaitForSeconds (8);
+        yield WaitForSeconds (3);
         cameraFade.fadeOut();
         Application.LoadLevel(nextLevel);
+	}
+}
+
+function Update() { 
+	if (Input.GetKeyDown("t")) {
+		Application.LoadLevel("MainMenu");
+	}
+	else if (Input.GetKeyDown("r")) {
+		Application.LoadLevel(Application.loadedLevel);
 	}
 }

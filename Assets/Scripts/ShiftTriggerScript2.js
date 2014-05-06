@@ -2,9 +2,11 @@
 
 private var TEST : ObjectManipulation;
 private var shade : Shader;
+private var standard : Shader;
 
 function Start () {
 	shade = Shader.Find("Self-Illumin/Outlined Diffuse");
+	standard = Shader.Find("Diffuse");
 }
 
 function Update () {
@@ -21,7 +23,11 @@ function OnTriggerStay(collision : Collider) {
 		if (!halo)
 			TEST.object.AddComponent("Halo");
 		*/
+		//var texture = renderer.material.mainTexture;
+		//Debug.Log(texture);
+		
 		TEST.object.renderer.material.shader = shade;
+		//TEST.object.gameObject.renderer.material.mainTexture = texture;
 	}
 }
 
@@ -35,7 +41,11 @@ function OnTriggerExit(collision : Collider) {
 		if (halo)
 			Destroy(halo);
 		*/
-		TEST.object.gameObject.renderer.material.shader = Shader.Find("Diffuse");
+		//var texture = renderer.material.mainTexture;
+		//Debug.Log(texture);
+		
+		TEST.object.gameObject.renderer.material.shader = standard;
+		//TEST.object.gameObject.renderer.material.mainTexture = texture;
 		TEST.object = null;
 	}
 }

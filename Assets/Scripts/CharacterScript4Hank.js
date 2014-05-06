@@ -61,7 +61,7 @@ function Awake() {
  *
  *	Called as this character updates.
  */
-function Update () {
+function FixedUpdate () {
 
 	// Lock the Z axis
 	transform.position.z = shouldLockTo;
@@ -133,8 +133,8 @@ function Update () {
 		}
 		
 		// Simulate acceleration by multiplying by the number of frames the character has been airborne for
-		yMotion = savedYMotion - (gravity * fallFrames);
-		fallFrames++;
+		yMotion = savedYMotion - (gravity * fallFrames * fallFrames);
+		fallFrames += Time.deltaTime;
 	}
 		
 	// Move	
