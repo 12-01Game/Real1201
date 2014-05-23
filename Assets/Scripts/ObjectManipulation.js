@@ -351,7 +351,6 @@ function interact() {
 			light2.enabled = !light2.enabled;
 		}
 		END TEST */
-f
 		//object.name == "LightSwitch" && ... 
 			//object will never get triggered to lightswitch so we use distance
 		if (lsd < 10 && this.tag == "Player") { //Sam or hank triggering this??
